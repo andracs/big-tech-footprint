@@ -778,6 +778,11 @@
       gap: 10px;
     }
 
+    .ai-explain-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
     .benchmark-card {
       box-shadow: none;
       background: #fbfcfa;
@@ -1186,24 +1191,25 @@
       <section class="chart-panel" aria-label="AI's ressourceforbrug">
         <div class="chart-top">
           <div>
-            <h2>AI's ressourceforbrug ifølge FN/UNU</h2>
+            <h2>AI's ressourceforbrug ifølge UNU, IEA og Google</h2>
             <p class="chart-copy">
-              Tallene er fra FN/UNU-rapporten 2026 og handler om, hvor meget strøm, vand og plads AI kan komme til at bruge frem mod 2030.
-              Det er fremskrivninger, ikke et facit.
+              Tallene samler UNU/UNU-C3, IEA og Google og viser, hvor meget strøm, vand og plads AI kan komme til at bruge frem mod 2030.
+              Det er fremskrivninger og effektivitetsmålinger, ikke et facit.
             </p>
           </div>
         </div>
         <div class="benchmark-list" id="aiPowerCards"></div>
         <div class="kpi-row" id="aiKpiRow"></div>
+        <div class="benchmark-list ai-explain-grid" id="aiExplainCards"></div>
         <div class="method-box">
-          <strong>Bemærk:</strong> Dette er FN/UNU-rapportens fremskrivninger. De viser retningen og omfanget, men ikke et endeligt regnskab.
+          <strong>Bemærk:</strong> AI-ressourceforbrug er summen af træning, løbende inferens, køling, elforbrug, hardware og forsyningskæder. Effektivitet pr. prompt hjælper, men totalen kan stadig stige, hvis brugen vokser hurtigere end gevinsterne.
         </div>
       </section>
 
       <section class="notes-panel" aria-label="AI-kilder">
         <div class="panel-head">
           <h2>Kilder</h2>
-          <span>UNU, Videnskab.dk, Statista, Cloudscene</span>
+          <span>UNU, IEA, Videnskab.dk, Cloudscene</span>
         </div>
         <ul class="source-list" id="aiSourceList"></ul>
         <div class="method-box">
@@ -1343,8 +1349,8 @@
           scope3: {2020: 5.091, 2021: 5.772583, 2022: 8.466264, 2023: 7.445621, 2024: 8.151769}
         },
         source: {
-          title: "Meta Environmental Data Index 2025",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf",
+          title: "Meta 2025 Sustainability Report",
+          url: "https://sustainability.atmeta.com/2025-sustainability-report/",
           note: "Total GHG emissions with contractual instruments applied, 2020-2024."
         }
       },
@@ -1479,15 +1485,15 @@
           quote: "net zero emissions across our value chain in 2030",
           quoteLiteral: true,
           sourceTitle: "Meta Sustainability Report",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Sustainability-Report_.pdf"
+          url: "https://sustainability.atmeta.com/2025-sustainability-report/"
         },
         latest: {
           when: "2024 / data index 2025",
           summary: "Meta rapporterer 8,200595 Mt CO2e i 2024 med kontraktuelle instrumenter; tallene er signifikant over 2020 og domineret af Scope 3.",
           quote: "8,200,595 metric tons CO2e",
           quoteLiteral: false,
-          sourceTitle: "Meta Environmental Data Index 2025",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf"
+          sourceTitle: "Meta 2025 Sustainability Report",
+          url: "https://sustainability.atmeta.com/2025-sustainability-report/"
         }
       },
       {
@@ -1636,50 +1642,90 @@
 
     const aiResourceFacts = [
       {
-        label: "Alle datacentre (2025)",
-        value: "På niveau med Frankrig",
-        note: "Datacentre var verdens 11. største strømforbruger i 2025.",
+        label: "Median Gemini-prompt",
+        value: "33x mindre energi",
+        note: "Google viser, at energiforbruget pr. prompt faldt 33-fold fra maj 2024 til maj 2025.",
         color: "#146c63"
       },
       {
-        label: "AI alene (2025)",
-        value: "Mere end Belgien + Finland",
-        note: "Kun AI-arbejdsbyrder, ikke hele datacentre.",
+        label: "Carbon footprint pr. prompt",
+        value: "44x lavere",
+        note: "Samtidig faldt karbonaftrykket 44-fold, når bedre effektivitet blev koblet med renere energi.",
         color: "#1d6b4f"
       },
       {
-        label: "Datacentre 2030",
-        value: "≈ 945 TWh",
-        note: "Ca. 3x Pakistan+Bangladesh+Nigeria.",
+        label: "Vand til tekst",
+        value: "0,05 liter",
+        note: "En side tekst kan kræve ca. 0,05 liter vand; en Gemini-prompt er målt til omkring fem dråber til køling.",
         color: "#5b6470"
+      },
+      {
+        label: "AI-fokuseret datacenter",
+        value: "≈ 100.000 hjem",
+        note: "Et enkelt AI-datacenter kan bruge lige så meget strøm som omkring 100.000 husstande.",
+        color: "#a75916"
+      },
+      {
+        label: "Global datacentre 2030",
+        value: "≈ 945 TWh",
+        note: "IEA forventer, at datacentre kan mere end fordoble deres elforbrug frem mod 2030.",
+        color: "#5b6470"
+      }
+    ];
+
+    const aiExplainCards = [
+      {
+        title: "Træning er kun første regning",
+        body: "De største modeller kræver meget strøm i træningsfasen, men den vedvarende belastning kommer ofte fra millioner af daglige forespørgsler, altså inferens. Det er derfor, per-prompt-tal er vigtige.",
+        source: "UNU C3, 2025"
+      },
+      {
+        title: "Hver forespørgsel trækker også på køling",
+        body: "AI bruger ikke kun compute; datacentre skal holdes kolde, og det betyder vand og ekstra el til køleanlæg. UNU og UNU-INWEH beskriver netop vand-energi-compute som ét samlet system.",
+        source: "UNU / UNU-INWEH, 2025"
+      },
+      {
+        title: "Effektivitet hjælper, men skalaen kan æde gevinsten",
+        body: "Google har reduceret energi og CO2 pr. Gemini-prompt markant, men hvis antallet af prompts vokser hurtigt, kan totalforbruget stadig stige. Det er den klassiske rebound-effekt.",
+        source: "Google Environmental Report 2025 + UNU C3, 2025"
+      },
+      {
+        title: "Datacentre er den store makrodriver",
+        body: "IEA vurderer, at datacentrenes elforbrug kan nå omkring 945 TWh i 2030 i base case. Derfor bør AI og datacenterudbygning læses som samme klimahistorie.",
+        source: "IEA Energy and AI, 2025"
       }
     ];
 
     const aiKpiFacts = [
       {
-        value: "2,6 år",
-        label: "Datacentres 2025-strøm svarer til Afrika syd for Sahara i 2,6 år",
-        source: "FN/UNU 2026"
+        value: "5 dråber",
+        label: "Google måler omkring fem dråber vand pr. Gemini-tekstprompt",
+        source: "UNU C3, 2025"
       },
       {
-        value: "3%",
-        label: "AI ventes at stå for ca. 3% af verdens el i 2030",
-        source: "FN/UNU 2026"
+        value: "0,05 L",
+        label: "En side tekst kan kræve ca. 0,05 liter vand ifølge UNU/C3-opsummeringen",
+        source: "UNU C3, 2025"
       },
       {
-        value: "9,3 billioner l",
-        label: "Datacentrenes vandforbrug i 2030 svarer til Afrika syd for Sahara i et år",
-        source: "FN/UNU 2026"
+        value: "33x",
+        label: "Energiforbruget pr. median Gemini-prompt blev reduceret 33-fold på ét år",
+        source: "UNU C3, 2025"
       },
       {
-        value: "2,5 mio. t",
-        label: "E-affald i 2030 svarer til ca. 250 Eiffeltårne",
-        source: "FN/UNU 2026"
+        value: "44x",
+        label: "Carbon footprint pr. prompt faldt 44-fold med effektivisering og renere strøm",
+        source: "UNU C3, 2025"
       },
       {
-        value: "14.500 km²",
-        label: "Arealaftryk i 2030 er ca. 2x Jakarta",
-        source: "FN/UNU 2026"
+        value: "100k",
+        label: "Et AI-fokuseret datacenter kan bruge strøm som omkring 100.000 husstande",
+        source: "UNU C3, 2025"
+      },
+      {
+        value: "945 TWh",
+        label: "IEA's 2030-bane for datacentre er næsten dobbelt så høj som i dag",
+        source: "IEA, 2025"
       },
       {
         value: "11.700+",
@@ -1695,14 +1741,29 @@
 
     const aiSources = [
       {
+        title: "UNU: The Algorithmic Thirst",
+        url: "https://unu.edu/article/algorithmic-thirst-ais-growth-demands-unified-approach-water-and-energy",
+        note: "UNU beskriver AI som et vand-, energi- og compute-nexus med behov for samlet planlægning af køling og strøm."
+      },
+      {
+        title: "UNU C3: AI's growing environmental footprint",
+        url: "https://c3.unu.edu/blog/a-data-driven-look-at-ais-growing-environmental-footprint",
+        note: "Giver konkrete per-prompt-tal for vand/energi og beskriver 33x/44x forbedringer i Gemini-effektivitet."
+      },
+      {
+        title: "UNU C3 infographic: Google AI energy transparency",
+        url: "https://c3.unu.edu/projects/ai/infographic/easyread_google_AI_energy_transparency.html",
+        note: "Visuel opsummering af prompt-energi, vandforbrug og hardware-effektivitet."
+      },
+      {
+        title: "IEA: Energy and AI",
+        url: "https://www.iea.org/reports/energy-and-ai",
+        note: "IEA's hovedrapport om datacentres elforbrug, 945 TWh i 2030 og hvilke energikilder der kan dække væksten."
+      },
+      {
         title: "Videnskab.dk: Datacentre bruger lige så meget strøm som Frankrig",
         url: "https://videnskab.dk/teknologi/datacentre-bruger-lige-saa-meget-stroem-som-frankrig-og-snart-mere-vand-end-hele-afrika/",
         note: "Artikel om FN/UNU-rapportens strøm-, vand- og arealdata for datacentre."
-      },
-      {
-        title: "UNU 2026: Environmental Cost of AI's Energy Use",
-        url: "https://unu.edu/inweh/collection/environmental-cost-of-AIs-Enrgy-Use-Carbon-water-and-land-footprints",
-        note: "FN/UNU-rapport om CO2, vand og areal for AI og datacentre frem mod 2030."
       },
       {
         title: "Statista / Cloudscene: Globale datacentre i april 2026",
@@ -1767,6 +1828,7 @@
       dataChartWrap: document.getElementById("dataChartWrap"),
       dataTooltip: document.getElementById("dataTooltip"),
       dataBenchmarks: document.getElementById("dataBenchmarks"),
+      aiExplainCards: document.getElementById("aiExplainCards"),
       dataTableBody: document.getElementById("dataTableBody"),
       dataSourceList: document.getElementById("dataSourceList")
     };
@@ -2533,6 +2595,17 @@
           <div class="kpi-label">${item.label}</div>
           <div class="kpi-extra">${item.source}</div>
         </div>
+      `).join("");
+
+      els.aiExplainCards.innerHTML = aiExplainCards.map((item) => `
+        <article class="benchmark-card">
+          <h3>${item.title}</h3>
+          <p class="data-note">${item.body}</p>
+          <div class="benchmark-meta">
+            <span>Hovedpointe</span>
+            <strong>${item.source}</strong>
+          </div>
+        </article>
       `).join("");
 
       els.aiSourceList.innerHTML = aiSources.map((source) => `
