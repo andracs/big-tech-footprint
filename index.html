@@ -908,7 +908,8 @@
       .button-row,
       .segmented,
       .range-grid,
-      .kpi-row {
+      .kpi-row,
+      .ai-explain-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1191,10 +1192,10 @@
       <section class="chart-panel" aria-label="AI's ressourceforbrug">
         <div class="chart-top">
           <div>
-            <h2>AI's ressourceforbrug ifølge UNU, IEA og Google</h2>
+            <h2>AI's ressourceforbrug med stærkere kilder</h2>
             <p class="chart-copy">
-              Tallene samler UNU/UNU-C3, IEA og Google og viser, hvor meget strøm, vand og plads AI kan komme til at bruge frem mod 2030.
-              Det er fremskrivninger og effektivitetsmålinger, ikke et facit.
+              Tallene samler primærkilder og fagfællebedømt forskning: IEA, DOE/LBNL, Google og Nature.
+              Fokus er strøm, CO2, vand, hardware og usikkerhed frem mod 2030.
             </p>
           </div>
         </div>
@@ -1209,11 +1210,11 @@
       <section class="notes-panel" aria-label="AI-kilder">
         <div class="panel-head">
           <h2>Kilder</h2>
-          <span>UNU, IEA, Videnskab.dk, Cloudscene</span>
+          <span>IEA, DOE/LBNL, Google, Nature</span>
         </div>
         <ul class="source-list" id="aiSourceList"></ul>
         <div class="method-box">
-          Danmark: 76 private datacentre ifølge Altinget. Energinet har sat store nettilslutninger i bero, og store datacenterprojekter kan møde en 5-10 års kø.
+          Datagrundlag: per-prompt-tal er leverandørmålinger fra én konkret modeltype og kan ikke direkte generaliseres til alle AI-systemer. Sektorprognoserne er scenarier, fordi efterspørgsel, modelarkitektur, chip-effektivitet og elnet er usikre.
         </div>
       </section>
     </section>
@@ -1642,133 +1643,161 @@
 
     const aiResourceFacts = [
       {
-        label: "Median Gemini-prompt",
-        value: "33x mindre energi",
-        note: "Google viser, at energiforbruget pr. prompt faldt 33-fold fra maj 2024 til maj 2025.",
+        label: "Global datacenter-el 2024",
+        value: "415 TWh",
+        note: "IEA estimerer, at datacentre brugte ca. 1,5% af verdens elforbrug i 2024. AI er ikke hele tallet, men en central vækstdriver.",
         color: "#146c63"
       },
       {
-        label: "Carbon footprint pr. prompt",
-        value: "44x lavere",
-        note: "Samtidig faldt karbonaftrykket 44-fold, når bedre effektivitet blev koblet med renere energi.",
+        label: "Global datacenter-el 2030",
+        value: "≈ 945 TWh",
+        note: "IEA's base case mere end fordobler datacentres elforbrug frem mod 2030; det er lidt mere end Japans elforbrug i dag.",
         color: "#1d6b4f"
       },
       {
-        label: "Vand til tekst",
-        value: "0,05 liter",
-        note: "En side tekst kan kræve ca. 0,05 liter vand; en Gemini-prompt er målt til omkring fem dråber til køling.",
+        label: "Google Gemini-prompt",
+        value: "0,24 Wh",
+        note: "Googles 2025-måling for en median Gemini Apps tekstprompt: 0,24 Wh, 0,03 g CO2e og 0,26 ml vand. Ikke tredjepartsverificeret.",
         color: "#5b6470"
       },
       {
-        label: "AI-fokuseret datacenter",
-        value: "≈ 100.000 hjem",
-        note: "Et enkelt AI-datacenter kan bruge lige så meget strøm som omkring 100.000 husstande.",
+        label: "USA datacentre 2028",
+        value: "325-580 TWh",
+        note: "DOE/LBNL forventer, at amerikanske datacentre kan vokse fra 176 TWh i 2023 til 325-580 TWh i 2028.",
         color: "#a75916"
       },
       {
-        label: "Global datacentre 2030",
-        value: "≈ 945 TWh",
-        note: "IEA forventer, at datacentre kan mere end fordoble deres elforbrug frem mod 2030.",
+        label: "AI-servere i USA",
+        value: "24-44 Mt CO2e/år",
+        note: "Nature Sustainability estimerer ekstra årlige emissioner fra AI-serverudbygning i USA i 2024-2030, afhængigt af scenarie.",
+        color: "#7a3f98"
+      },
+      {
+        label: "Vandaftryk for AI-servere",
+        value: "731-1.125 mio. m3/år",
+        note: "Samme Nature-studie estimerer årligt vandaftryk for AI-servere i USA; indirekte vand fra elproduktion er en stor del.",
         color: "#5b6470"
+      },
+      {
+        label: "E-waste fra generativ AI",
+        value: "1,2-5,0 Mt",
+        note: "Nature Computational Science estimerer mulig akkumuleret e-waste fra generativ AI i 2020-2030 uden stærke cirkulære tiltag.",
+        color: "#8b5b2f"
+      },
+      {
+        label: "Materialer i AI-hardware",
+        value: "32 elementer",
+        note: "Communications Earth & Environment analyserede en A100 GPU og peger på, at AI's ressourceaftryk også er mineraler, metaller og hardwarelevetid.",
+        color: "#0b7f83"
       }
     ];
 
     const aiExplainCards = [
       {
-        title: "Træning er kun første regning",
-        body: "De største modeller kræver meget strøm i træningsfasen, men den vedvarende belastning kommer ofte fra millioner af daglige forespørgsler, altså inferens. Det er derfor, per-prompt-tal er vigtige.",
-        source: "UNU C3, 2025"
+        title: "Systemgrænsen afgør tallet",
+        body: "Google viser selv forskellen: en smal måling af aktiv accelerator-strøm giver 0,10 Wh pr. prompt, mens en fuld stack med CPU/RAM, idle-kapacitet, køling og datacenteroverhead giver 0,24 Wh.",
+        source: "Google Cloud, 2025"
       },
       {
-        title: "Hver forespørgsel trækker også på køling",
-        body: "AI bruger ikke kun compute; datacentre skal holdes kolde, og det betyder vand og ekstra el til køleanlæg. UNU og UNU-INWEH beskriver netop vand-energi-compute som ét samlet system.",
-        source: "UNU / UNU-INWEH, 2025"
+        title: "Per prompt er ikke sektorens total",
+        body: "Et enkelt prompt kan være lille, men samlet forbrug bestemmes af volumen, modelstørrelse, billed/video-generering, agentiske workflows og hvor længe hardware står reserveret til spidsbelastning.",
+        source: "IEA + Google"
       },
       {
-        title: "Effektivitet hjælper, men skalaen kan æde gevinsten",
-        body: "Google har reduceret energi og CO2 pr. Gemini-prompt markant, men hvis antallet af prompts vokser hurtigt, kan totalforbruget stadig stige. Det er den klassiske rebound-effekt.",
-        source: "Google Environmental Report 2025 + UNU C3, 2025"
+        title: "Lokation betyder næsten alt for vand og CO2",
+        body: "Nature Sustainability fremhæver, at elmix, vandstress, køleteknologi og placering afgør aftrykket. I deres AI-servermodel er indirekte vand fra elproduktion 71% af vandaftrykket.",
+        source: "Nature Sustainability, 2025"
       },
       {
-        title: "Datacentre er den store makrodriver",
-        body: "IEA vurderer, at datacentrenes elforbrug kan nå omkring 945 TWh i 2030 i base case. Derfor bør AI og datacenterudbygning læses som samme klimahistorie.",
+        title: "Hardware er også en ressource",
+        body: "AI-ressourceforbrug er ikke kun strøm og vand. Nye GPU'er kræver materialer, forsyningskæder og hurtig udskiftning; e-waste-studier peger på behov for længere levetid og cirkulær økonomi.",
+        source: "Nature Computational Science, 2024"
+      },
+      {
+        title: "Usikkerheden er reel",
+        body: "IEA's spænd for globalt datacenterforbrug i 2035 går fra 700 til 1.700 TWh på tværs af scenarier. Det bør vises som interval, ikke som én præcis fremtid.",
         source: "IEA Energy and AI, 2025"
+      },
+      {
+        title: "Åbenhed er stadig den største mangel",
+        body: "Google har publiceret en metode for Gemini, men tilsvarende sammenlignelige tal findes ikke bredt for OpenAI, Anthropic og andre. Derfor bør man markere datamangler tydeligt.",
+        source: "Google + offentlig rapportering"
       }
     ];
 
     const aiKpiFacts = [
       {
-        value: "5 dråber",
-        label: "Google måler omkring fem dråber vand pr. Gemini-tekstprompt",
-        source: "UNU C3, 2025"
-      },
-      {
-        value: "0,05 L",
-        label: "En side tekst kan kræve ca. 0,05 liter vand ifølge UNU/C3-opsummeringen",
-        source: "UNU C3, 2025"
-      },
-      {
-        value: "33x",
-        label: "Energiforbruget pr. median Gemini-prompt blev reduceret 33-fold på ét år",
-        source: "UNU C3, 2025"
-      },
-      {
-        value: "44x",
-        label: "Carbon footprint pr. prompt faldt 44-fold med effektivisering og renere strøm",
-        source: "UNU C3, 2025"
-      },
-      {
-        value: "100k",
-        label: "Et AI-fokuseret datacenter kan bruge strøm som omkring 100.000 husstande",
-        source: "UNU C3, 2025"
-      },
-      {
-        value: "945 TWh",
-        label: "IEA's 2030-bane for datacentre er næsten dobbelt så høj som i dag",
+        value: "415 TWh",
+        label: "Globalt elforbrug fra datacentre i 2024, ca. 1,5% af verdens elforbrug",
         source: "IEA, 2025"
       },
       {
-        value: "11.700+",
-        label: "Datacentre i verden i april 2026",
-        source: "Statista / Cloudscene"
+        value: "945 TWh",
+        label: "IEA base case for globalt datacenter-elforbrug i 2030",
+        source: "IEA, 2025"
       },
       {
-        value: "5.000+",
-        label: "Datacentre i USA",
-        source: "Statista / Cloudscene"
+        value: "325-580 TWh",
+        label: "USA datacentres elforbrug i 2028 i DOE/LBNL-scenarier",
+        source: "DOE/LBNL, 2024"
+      },
+      {
+        value: "0,24 Wh",
+        label: "Googles fuld-stack-måling for en median Gemini Apps tekstprompt",
+        source: "Google, 2025"
+      },
+      {
+        value: "0,26 ml",
+        label: "Googles estimerede vandforbrug pr. median Gemini Apps tekstprompt",
+        source: "Google, 2025"
+      },
+      {
+        value: "24-44 Mt",
+        label: "Ekstra årlige CO2e-emissioner fra AI-servere i USA i 2024-2030",
+        source: "Nature Sustainability, 2025"
+      },
+      {
+        value: "731-1.125 mio. m3",
+        label: "Årligt vandaftryk fra AI-servere i USA i Nature-scenarierne",
+        source: "Nature Sustainability, 2025"
+      },
+      {
+        value: "1,2-5,0 Mt",
+        label: "Mulig akkumuleret e-waste fra generativ AI i 2020-2030",
+        source: "Nature Computational Science, 2024"
       }
     ];
 
     const aiSources = [
       {
-        title: "UNU: The Algorithmic Thirst",
-        url: "https://unu.edu/article/algorithmic-thirst-ais-growth-demands-unified-approach-water-and-energy",
-        note: "UNU beskriver AI som et vand-, energi- og compute-nexus med behov for samlet planlægning af køling og strøm."
-      },
-      {
-        title: "UNU C3: AI's growing environmental footprint",
-        url: "https://c3.unu.edu/blog/a-data-driven-look-at-ais-growing-environmental-footprint",
-        note: "Giver konkrete per-prompt-tal for vand/energi og beskriver 33x/44x forbedringer i Gemini-effektivitet."
-      },
-      {
-        title: "UNU C3 infographic: Google AI energy transparency",
-        url: "https://c3.unu.edu/projects/ai/infographic/easyread_google_AI_energy_transparency.html",
-        note: "Visuel opsummering af prompt-energi, vandforbrug og hardware-effektivitet."
-      },
-      {
         title: "IEA: Energy and AI",
-        url: "https://www.iea.org/reports/energy-and-ai",
-        note: "IEA's hovedrapport om datacentres elforbrug, 945 TWh i 2030 og hvilke energikilder der kan dække væksten."
+        url: "https://www.iea.org/reports/energy-and-ai/executive-summary",
+        note: "Globalt overblik: datacentre brugte ca. 415 TWh i 2024 og kan nå ca. 945 TWh i 2030; AI er den vigtigste vækstdriver."
       },
       {
-        title: "Videnskab.dk: Datacentre bruger lige så meget strøm som Frankrig",
-        url: "https://videnskab.dk/teknologi/datacentre-bruger-lige-saa-meget-stroem-som-frankrig-og-snart-mere-vand-end-hele-afrika/",
-        note: "Artikel om FN/UNU-rapportens strøm-, vand- og arealdata for datacentre."
+        title: "DOE/LBNL: 2024 United States Data Center Energy Usage Report",
+        url: "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+        note: "Officiel DOE-opsummering af LBNL-rapporten: USA's datacentre brugte 176 TWh i 2023 og kan nå 325-580 TWh i 2028."
       },
       {
-        title: "Statista / Cloudscene: Globale datacentre i april 2026",
-        url: "https://cloudscene.com/",
-        note: "Oversigt over antal datacentre globalt og i USA."
+        title: "Google Cloud: How much energy does Google's AI use?",
+        url: "https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference",
+        note: "Førstepartsmåling af Gemini Apps tekstprompt: 0,24 Wh, 0,03 g CO2e og 0,26 ml vand med fuld-stack-metode."
+      },
+      {
+        title: "Nature Sustainability: Environmental impact of AI servers in the USA",
+        url: "https://www.nature.com/articles/s41893-025-01681-y",
+        note: "Fagfællebedømt analyse af AI-servere i USA: 24-44 Mt CO2e og 731-1.125 mio. m3 vand årligt i 2024-2030-scenarier."
+      },
+      {
+        title: "Nature Computational Science: E-waste challenges of generative AI",
+        url: "https://www.nature.com/articles/s43588-024-00712-6",
+        note: "Fagfællebedømt e-waste-scenarie: generativ AI kan akkumulere 1,2-5,0 Mt e-waste i 2020-2030 uden stærke cirkulære tiltag."
+      },
+      {
+        title: "Communications Earth & Environment: Resource burden of AI",
+        url: "https://www.nature.com/articles/s43247-026-03537-5",
+        note: "Open-access studie fra 2026 om materialeforbrug i AI-træning, GPU-levetid og hvorfor hardwarematerialer bør indgå i AI-regnskaber."
       }
     ];
 
