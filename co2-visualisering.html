@@ -1,0 +1,2400 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CO2e-udledninger: faktisk vs forventet</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f2;
+      --panel: #ffffff;
+      --ink: #17201b;
+      --muted: #61706a;
+      --line: #d8ded6;
+      --strong-line: #aab6ad;
+      --accent: #146c63;
+      --accent-2: #234c9f;
+      --warn: #a75916;
+      --shadow: 0 18px 45px rgba(31, 45, 38, 0.11);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.1) 42%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    main {
+      width: min(1480px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 36px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      padding: 6px 2px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 880px;
+      font-size: clamp(2rem, 3.8vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .status-chip {
+      justify-self: end;
+      border: 1px solid var(--strong-line);
+      color: #24382f;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.72);
+      white-space: nowrap;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.72);
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .tab-button {
+      min-height: 40px;
+      white-space: nowrap;
+    }
+
+    .view-panel {
+      display: none;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    aside,
+    .chart-panel,
+    .table-panel,
+    .notes-panel {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    aside {
+      padding: 14px;
+      position: sticky;
+      top: 14px;
+    }
+
+    .control-block + .control-block {
+      border-top: 1px solid var(--line);
+      margin-top: 15px;
+      padding-top: 15px;
+    }
+
+    .control-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 10px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #4a5c54;
+      font-weight: 800;
+    }
+
+    .company-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .company-toggle {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfa;
+      cursor: pointer;
+      transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+
+    .company-toggle:hover {
+      border-color: var(--strong-line);
+      transform: translateY(-1px);
+    }
+
+    .company-toggle input {
+      accent-color: var(--accent);
+      margin: 0;
+    }
+
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .company-name {
+      font-weight: 700;
+      font-size: 0.93rem;
+    }
+
+    .data-badge {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .button-row,
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    button,
+    .segmented button {
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      border-radius: 7px;
+      color: var(--ink);
+      padding: 9px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      min-height: 38px;
+    }
+
+    button:hover,
+    .segmented button:hover {
+      border-color: var(--strong-line);
+    }
+
+    button.active,
+    .segmented button.active {
+      border-color: rgba(20, 108, 99, 0.38);
+      background: rgba(20, 108, 99, 0.11);
+      color: #0c4f48;
+    }
+
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfa;
+      color: var(--ink);
+      padding: 9px 10px;
+      min-height: 40px;
+    }
+
+    .range-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .range-grid label {
+      display: grid;
+      gap: 5px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .small-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.79rem;
+      line-height: 1.45;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+    }
+
+    .chart-panel {
+      padding: 14px;
+      min-height: 620px;
+    }
+
+    .chart-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+
+    .chart-top h2 {
+      margin: 0;
+      font-size: 1.18rem;
+      letter-spacing: 0;
+    }
+
+    .chart-copy {
+      color: var(--muted);
+      margin: 6px 0 0;
+      max-width: 780px;
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      justify-content: flex-end;
+      max-width: 520px;
+      font-size: 0.82rem;
+      color: #3a4a42;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .legend-line {
+      width: 26px;
+      height: 0;
+      border-top: 3px solid currentColor;
+      border-radius: 999px;
+    }
+
+    .legend-line.expected {
+      border-top-style: dashed;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfa;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .axis text,
+    .grid-label {
+      fill: #52645b;
+      font-size: 12px;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: #aeb9b1;
+    }
+
+    .grid line {
+      stroke: #e3e8e1;
+      stroke-width: 1;
+    }
+
+    .series-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .series-line.expected {
+      stroke-dasharray: 7 7;
+      stroke-width: 2.4;
+      opacity: 0.86;
+    }
+
+    .point {
+      stroke: #fff;
+      stroke-width: 2;
+      cursor: crosshair;
+    }
+
+    .point.expected {
+      fill: #fff;
+      stroke-width: 2.4;
+    }
+
+    .forecast-band {
+      fill: rgba(20, 108, 99, 0.055);
+    }
+
+    .target-zero-line {
+      stroke: rgba(167, 89, 22, 0.52);
+      stroke-width: 1.5;
+      stroke-dasharray: 6 6;
+    }
+
+    .tooltip {
+      position: absolute;
+      min-width: 220px;
+      max-width: 280px;
+      padding: 10px 11px;
+      border: 1px solid var(--strong-line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 12px 30px rgba(29, 43, 36, 0.18);
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 14px));
+      opacity: 0;
+      transition: opacity 120ms ease;
+      font-size: 0.86rem;
+      z-index: 10;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+    }
+
+    .tooltip strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tooltip span {
+      display: block;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .kpi {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfa;
+      padding: 11px;
+      min-height: 94px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 7px;
+    }
+
+    .kpi-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.08;
+    }
+
+    .kpi-extra {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 6px;
+      line-height: 1.35;
+    }
+
+    .below-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
+      gap: 18px;
+    }
+
+    .table-panel,
+    .notes-panel {
+      padding: 14px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 1.03rem;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .table-scroll {
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e8ece6;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f2f5f0;
+      color: #46584f;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      z-index: 1;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    tr:hover td {
+      background: #fbfcfa;
+    }
+
+    .missing {
+      color: #8a5d2a;
+      background: rgba(167, 89, 22, 0.09);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.76rem;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .source-list li {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      background: #fbfcfa;
+    }
+
+    .source-list a {
+      color: var(--accent-2);
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .source-list a:hover {
+      text-decoration: underline;
+    }
+
+    .source-list p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      line-height: 1.42;
+      font-size: 0.82rem;
+    }
+
+    .method-box {
+      margin-top: 12px;
+      padding: 11px;
+      border-left: 4px solid var(--accent);
+      background: rgba(20, 108, 99, 0.08);
+      border-radius: 0 7px 7px 0;
+      color: #244238;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      fill: #5f7168;
+      font-size: 15px;
+      text-anchor: middle;
+    }
+
+    .wide-panel {
+      margin-top: 18px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .view-panel:not(.active) {
+      display: none;
+    }
+
+    .promise-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .promise-card,
+    .benchmark-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .promise-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .promise-top h2,
+    .benchmark-card h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .risk-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      color: #405249;
+      font-size: 0.74rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .risk-pill.bad {
+      color: #7d3f0d;
+      border-color: rgba(167, 89, 22, 0.28);
+      background: rgba(167, 89, 22, 0.1);
+    }
+
+    .risk-pill.ok {
+      color: #0c4f48;
+      border-color: rgba(20, 108, 99, 0.34);
+      background: rgba(20, 108, 99, 0.1);
+    }
+
+    .risk-pill.missing {
+      color: #5d4c20;
+      border-color: rgba(130, 104, 31, 0.28);
+      background: rgba(130, 104, 31, 0.1);
+    }
+
+    .promise-detail {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 5px 10px;
+      margin: 0;
+      font-size: 0.86rem;
+      line-height: 1.42;
+    }
+
+    .promise-detail dt {
+      color: var(--muted);
+    }
+
+    .promise-detail dd {
+      margin: 0;
+    }
+
+    .quote-block {
+      margin: 12px 0 0;
+      padding: 10px 11px;
+      border-left: 4px solid var(--accent);
+      background: rgba(20, 108, 99, 0.08);
+      border-radius: 0 7px 7px 0;
+      color: #203c33;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .quote-block strong {
+      display: block;
+      color: #10251f;
+      margin-bottom: 4px;
+    }
+
+    .source-link {
+      color: var(--accent-2);
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .source-link:hover {
+      text-decoration: underline;
+    }
+
+    .data-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .benchmark-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .benchmark-card {
+      box-shadow: none;
+      background: #fbfcfa;
+      padding: 11px;
+    }
+
+    .benchmark-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 5px;
+    }
+
+    .bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #e7ece5;
+      overflow: hidden;
+      margin-top: 9px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .data-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .wide-panel td {
+      white-space: normal;
+      vertical-align: top;
+      line-height: 1.42;
+      min-width: 130px;
+    }
+
+    .wide-panel th {
+      white-space: nowrap;
+    }
+
+    .projection-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 7 7;
+    }
+
+    .projection-area {
+      fill: rgba(20, 108, 99, 0.09);
+    }
+
+    .reference-line {
+      stroke-width: 2;
+      stroke-dasharray: 4 6;
+      opacity: 0.78;
+    }
+
+    .scenario-line {
+      fill: none;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 2 7;
+    }
+
+    .chart-label {
+      fill: #2e3d36;
+      font-size: 11px;
+      font-weight: 750;
+      paint-order: stroke;
+      stroke: rgba(251, 252, 250, 0.92);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 1060px) {
+      .dashboard,
+      .below-grid,
+      .data-layout,
+      .promise-grid {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+      }
+
+      .chart-top {
+        grid-template-columns: 1fr;
+      }
+
+      .legend {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 680px) {
+      main {
+        width: min(100vw - 20px, 1480px);
+        padding-top: 12px;
+      }
+
+      header {
+        grid-template-columns: 1fr;
+      }
+
+      .status-chip {
+        justify-self: start;
+      }
+
+      .button-row,
+      .segmented,
+      .range-grid,
+      .kpi-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab-button {
+        flex: 1 1 100%;
+      }
+
+      .chart-wrap {
+        height: 430px;
+      }
+
+      th,
+      td {
+        padding: 8px 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Faktiske og forventede CO<sub>2</sub>e-udledninger</h1>
+        <p class="subtitle">
+          Interaktiv visualisering af rapporterede drivhusgasudledninger fra Microsoft, Google, Apple, Amazon og Meta/Facebook
+          mellem 2020 og 2026. OpenAI og Anthropic er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige
+          &aring;rlige virksomhedstal for Scope 1, 2 og 3.
+        </p>
+      </div>
+      <div class="status-chip">Senest verificeret: 6. juni 2026</div>
+    </header>
+
+    <nav class="tabs" aria-label="Faner">
+      <button type="button" class="tab-button active" data-tab-target="footprint">Footprints</button>
+      <button type="button" class="tab-button" data-tab-target="promises">L&oslash;fter vs nyeste</button>
+      <button type="button" class="tab-button" data-tab-target="data-centres">Datacentre & brancher</button>
+    </nav>
+
+    <section class="dashboard view-panel active" id="panel-footprint" data-tab-panel="footprint">
+      <aside aria-label="Kontroller">
+        <div class="control-block">
+          <div class="control-title">Virksomheder</div>
+          <div class="button-row" aria-label="V&aelig;lg virksomheder">
+            <button id="selectAll" type="button">Alle</button>
+            <button id="selectNone" type="button">Ingen</button>
+          </div>
+          <div class="company-list" id="companyList"></div>
+        </div>
+
+        <div class="control-block">
+          <div class="control-title">M&aring;l</div>
+          <select id="metricSelect" aria-label="V&aelig;lg emissionsm&aring;l">
+            <option value="total">Total Scope 1+2+3</option>
+            <option value="scope1">Scope 1</option>
+            <option value="scope2">Scope 2, market-based</option>
+            <option value="scope3">Scope 3</option>
+          </select>
+        </div>
+
+        <div class="control-block">
+          <div class="control-title">Forventet kurve</div>
+          <div class="segmented" role="group" aria-label="Forventningsmodel">
+            <button type="button" data-expectation="target" class="active">M&aring;lbane</button>
+            <button type="button" data-expectation="trend">Datatrend</button>
+          </div>
+          <p class="small-note" id="expectationHelp">
+            M&aring;lbanen er en line&aelig;r vej mod de offentlige klimam&aring;l. Datatrenden er en simpel line&aelig;r regression p&aring;
+            rapporterede tal.
+          </p>
+        </div>
+
+        <div class="control-block">
+          <div class="control-title">Visning</div>
+          <div class="segmented" role="group" aria-label="Skala">
+            <button type="button" data-view="absolute" class="active">Mt CO<sub>2</sub>e</button>
+            <button type="button" data-view="index">Indeks</button>
+          </div>
+          <p class="small-note">Indeks s&aelig;tter hver virksomheds 2020-tal til 100, s&aring; mindre og st&oslash;rre footprints kan sammenlignes.</p>
+        </div>
+
+        <div class="control-block">
+          <div class="control-title">&Aring;r</div>
+          <div class="range-grid">
+            <label>
+              Fra <strong id="startYearLabel">2020</strong>
+              <input id="startYear" type="range" min="2020" max="2026" value="2020" step="1">
+            </label>
+            <label>
+              Til <strong id="endYearLabel">2026</strong>
+              <input id="endYear" type="range" min="2020" max="2026" value="2026" step="1">
+            </label>
+          </div>
+        </div>
+      </aside>
+
+      <div class="content">
+        <section class="chart-panel" aria-label="Graf">
+          <div class="chart-top">
+            <div>
+              <h2 id="chartTitle">Total Scope 1+2+3, faktisk vs forventet</h2>
+              <p class="chart-copy" id="chartCopy">
+                Fuld streg er rapporterede faktiske tal. Stiplet streg er den valgte forventningsmodel. 2025-2026 er som
+                hovedregel forventede tal, fordi de fleste selskaber endnu ikke har offentliggjort fulde, sammenlignelige
+                &aring;rlige emissioner.
+              </p>
+            </div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="chart-wrap" id="chartWrap">
+            <svg id="chart" role="img" aria-label="CO2e-graf"></svg>
+            <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+          </div>
+          <div class="kpi-row" id="kpis"></div>
+        </section>
+
+        <section class="below-grid">
+          <section class="table-panel" aria-label="Datatabel">
+            <div class="panel-head">
+              <h2>Dataudsnit</h2>
+              <span id="tableMeta">Mt CO<sub>2</sub>e</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Virksomhed</th>
+                    <th>&Aring;r</th>
+                    <th>Faktisk</th>
+                    <th>Forventet</th>
+                    <th>Gap</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dataTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="notes-panel" aria-label="Kilder og metode">
+            <div class="panel-head">
+              <h2>Kilder og metode</h2>
+              <span>Scope 2/3 er market-based hvor rapporteret</span>
+            </div>
+            <ul class="source-list" id="sourceList"></ul>
+            <div class="method-box">
+              <strong>Vigtigt:</strong> Tallene er CO<sub>2</sub>-&aelig;kvivalenter, ikke kun ren CO<sub>2</sub>. M&aring;lbaner er
+              illustrative, fordi virksomhedernes klimam&aring;l blander reduktioner, vedvarende energi og carbon removal p&aring;
+              forskellige m&aring;der. Derfor er de nyttige til retning og afstand til m&aring;l, men ikke en revisionsklar prognose.
+            </div>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section class="wide-panel view-panel" id="panel-promises" data-tab-panel="promises">
+      <section class="chart-panel" aria-label="CO2-neutralitetsl&oslash;fter">
+        <div class="chart-top">
+          <div>
+            <h2>Hvad lovede de, og hvad viser de nyeste tal?</h2>
+            <p class="chart-copy">
+              Korte, konkrete citater fra selskabernes egne klimal&oslash;fter holdes op mod de seneste offentlige rapporterede tal.
+              Statusfeltet er en analytisk vurdering af afstanden mellem l&oslash;ftet og den nyeste emissionsretning.
+            </p>
+          </div>
+        </div>
+        <div class="promise-grid" id="promiseCards"></div>
+      </section>
+
+      <section class="table-panel" aria-label="L&oslash;ftetabel">
+        <div class="panel-head">
+          <h2>Citater og status</h2>
+          <span>Offentlige kilder, korte uddrag</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Hvem</th>
+                <th>L&oslash;fte</th>
+                <th>Hvordan</th>
+                <th>Nyeste status</th>
+                <th>Kilde</th>
+              </tr>
+            </thead>
+            <tbody id="promiseTable"></tbody>
+          </table>
+        </div>
+        <div class="method-box">
+          <strong>Fortolkning:</strong> "G&aring;r v&aelig;k fra det" betyder her enten, at emissionskurven bev&aelig;ger sig v&aelig;k fra en line&aelig;r
+          m&aring;lbane, eller at den offentlige kommunikation/rapportering ikke l&aelig;ngere underst&oslash;tter l&oslash;ftet med en klar, sammenlignelig
+          nedadg&aring;ende udvikling. Det er ikke en juridisk vurdering af, om et l&oslash;fte er opgivet.
+        </div>
+      </section>
+    </section>
+
+    <section class="wide-panel view-panel" id="panel-data-centres" data-tab-panel="data-centres">
+      <section class="chart-panel" aria-label="Datacenterudledning">
+        <div class="chart-top">
+          <div>
+            <h2>Datacentre: CO<sub>2</sub>-stigning og prognose</h2>
+            <p class="chart-copy">
+              Estimatet viser global elrelateret CO<sub>2</sub> fra datacentre. 2024 er forankret i IEA's seneste niveau,
+              2020-2023 er bagudregnet fra IEA's historiske v&aelig;kstrate, og 2025-2030 er fremskrevet mod IEA's base case
+              p&aring; ca. 320 Mt CO<sub>2</sub>. Grafen bruger log-skala, s&aring; datacentre kan sammenlignes med st&oslash;rre brancher.
+            </p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-line" style="color:#146c63"></span>Estimat</span>
+            <span class="legend-item"><span class="legend-line expected" style="color:#146c63"></span>Prognose</span>
+            <span class="legend-item"><span class="legend-line expected" style="color:#7d3f0d"></span>IPCC 1,5&deg;C</span>
+            <span class="legend-item"><span class="legend-line expected" style="color:#5b6470"></span>Brancher</span>
+          </div>
+        </div>
+        <div class="data-layout">
+          <div>
+            <div class="chart-wrap" id="dataChartWrap">
+              <svg id="dataChart" role="img" aria-label="Global datacenter CO2e-prognose"></svg>
+              <div class="tooltip" id="dataTooltip" aria-hidden="true"></div>
+            </div>
+            <p class="data-note">
+              Afgr&aelig;nsning: datacentre d&aelig;kker elrelaterede udledninger fra compute/serverdrift, ikke fulde livscyklusudledninger
+              fra hardware, netv&aelig;rk eller slutbrugerudstyr. IPCC-linjerne er illustrative klimakompatible referencebaner,
+              ikke officielle datacentersektorbudgetter.
+            </p>
+          </div>
+          <aside aria-label="Branchebenchmarks">
+            <div class="control-title">Sammenlignelige brancher</div>
+            <div class="benchmark-list" id="dataBenchmarks"></div>
+            <p class="small-note">
+              Benchmarkkortene og reference-linjerne bruger seneste offentlige datapunkt pr. sektor. &Aring;r er derfor ikke identiske, men de giver
+              st&oslash;rrelsesorden p&aring; tv&aelig;rs af energiintensive digitale og transport-/materialesektorer.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="below-grid">
+        <section class="table-panel" aria-label="Datacenterdata">
+          <div class="panel-head">
+            <h2>&Aring;rlig datacenterudledning og klimascenarier</h2>
+            <span>Mt CO<sub>2</sub></span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>&Aring;r</th>
+                  <th>Global datacenter CO<sub>2</sub></th>
+                  <th>Type</th>
+                  <th>Metode</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="notes-panel" aria-label="Datacenterkilder">
+          <div class="panel-head">
+            <h2>Kilder</h2>
+            <span>IEA, IATA, EDGAR/JRC</span>
+          </div>
+          <ul class="source-list" id="dataSourceList"></ul>
+          <div class="method-box">
+            <strong>Prognosemetode:</strong> 2024 = IEA's omtrentlige 180 Mt CO<sub>2</sub>. 2020-2023 er bagudregnet med
+            12% &aring;rlig v&aelig;kst. 2025-2030 interpolerer mod IEA's base case p&aring; ca. 320 Mt CO<sub>2</sub> i 2030. IPCC-scenarierne
+            anvender globale reduktionsprocenter p&aring; 2024-datacenterniveauet som en visuel klimamark&oslash;r.
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+    const METRICS = {
+      total: "Total Scope 1+2+3",
+      scope1: "Scope 1",
+      scope2: "Scope 2, market-based",
+      scope3: "Scope 3"
+    };
+
+    const companies = [
+      {
+        id: "microsoft",
+        name: "Microsoft",
+        color: "#16665c",
+        selected: true,
+        target: {
+          kind: "reduction",
+          baselineYear: 2020,
+          baseline: 12.37,
+          targetYear: 2030,
+          targetValue: 6.185,
+          label: "Reducerer egne udledninger med mere end halvdelen i 2030 og fjerner resten."
+        },
+        actual: {
+          total: {2020: 12.37, 2021: 14.129, 2022: 16.343, 2023: 16.935, 2024: 15.543},
+          scope1: {2020: 0.1181, 2021: 0.123704, 2022: 0.139413, 2023: 0.14496, 2024: 0.14351},
+          scope2: {2020: 0.456119, 2021: 0.429405, 2022: 0.288029, 2023: 0.393134, 2024: 0.25909},
+          scope3: {2020: 11.796, 2021: 13.576, 2022: 15.916, 2023: 16.397, 2024: 15.14}
+        },
+        source: {
+          title: "Microsoft Environmental Data Fact Sheet 2025",
+          url: "https://aka.ms/SustainabilityFactsheet2025",
+          note: "FY20-FY24 GHG emissions by scope, market-based total."
+        }
+      },
+      {
+        id: "google",
+        name: "Google",
+        color: "#2450a6",
+        selected: true,
+        target: {
+          kind: "netzero",
+          baselineYear: 2020,
+          baseline: 8.7374,
+          targetYear: 2030,
+          targetValue: 0,
+          label: "Net-zero across operations and value chain by 2030."
+        },
+        actual: {
+          total: {2020: 8.7374, 2021: 10.5206, 2022: 11.9003, 2023: 14.2968, 2024: 15.1852},
+          scope1: {2020: 0.0558, 2021: 0.0641, 2022: 0.0912, 2023: 0.0794, 2024: 0.0731},
+          scope2: {2020: 0.9116, 2021: 1.8235, 2022: 2.4921, 2023: 3.4234, 2024: 3.0591},
+          scope3: {2020: 7.77, 2021: 8.633, 2022: 9.317, 2023: 10.794, 2024: 12.053}
+        },
+        source: {
+          title: "Google Environmental Report 2025",
+          url: "https://www.sustainability.google/reports/google-2025-environmental-report/",
+          note: "2024 fiscal-year inventory table, Scope 1, Scope 2 market-based and Scope 3."
+        }
+      },
+      {
+        id: "apple",
+        name: "Apple",
+        color: "#5b6470",
+        selected: true,
+        target: {
+          kind: "apple2030",
+          baselineYear: 2015,
+          baseline: 38.4,
+          targetYear: 2030,
+          targetValue: 9.6,
+          label: "Apple 2030: 75% gross reduction from 2015 baseline, then removals for residual emissions."
+        },
+        actual: {
+          total: {2020: 22.6, 2021: 23.2, 2022: 20.6, 2023: 16.1, 2024: 15.3},
+          scope1: {2020: 0.04743, 2021: 0.0552, 2022: 0.0552, 2023: 0.0552, 2024: 0.0552},
+          scope2: {2020: 0, 2021: 0.00278, 2022: 0.003, 2023: 0.0034, 2024: 0.0033},
+          scope3: {2020: 22.55, 2021: 23.13, 2022: 20.5458, 2023: 15.9828, 2024: 15.11}
+        },
+        source: {
+          title: "Apple Environmental Progress Report 2025",
+          url: "https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2025.pdf",
+          note: "Gross carbon footprint without offsets, FY20-FY24."
+        }
+      },
+      {
+        id: "amazon",
+        name: "Amazon",
+        color: "#b45f13",
+        selected: true,
+        target: {
+          kind: "netzero",
+          baselineYear: 2020,
+          baseline: 60.64,
+          targetYear: 2040,
+          targetValue: 0,
+          label: "The Climate Pledge: net-zero carbon by 2040."
+        },
+        actual: {
+          total: {2020: 60.64, 2021: 71.54, 2022: 65.1, 2023: 64.38, 2024: 68.25},
+          scope1: {2020: 9.62, 2021: 12.11, 2022: 13.02, 2023: 14.22, 2024: 15.13},
+          scope2: {2020: 5.27, 2021: 4.07, 2022: 3.06, 2023: 2.76, 2024: 2.8},
+          scope3: {2020: 45.75, 2021: 55.36, 2022: 49.02, 2023: 47.4, 2024: 50.32}
+        },
+        source: {
+          title: "Amazon Sustainability Report 2024",
+          url: "https://sustainability.aboutamazon.com/content/dam/sustainability-marketing-site/pdfs/reports-docs/2024-amazon-sustainability-report.pdf",
+          note: "Amazon carbon footprint data table, 2020-2024."
+        }
+      },
+      {
+        id: "meta",
+        name: "Meta / Facebook",
+        color: "#7a3f98",
+        selected: true,
+        target: {
+          kind: "netzero",
+          baselineYear: 2020,
+          baseline: 5.129,
+          targetYear: 2030,
+          targetValue: 0,
+          label: "Net zero emissions across value chain by 2030."
+        },
+        actual: {
+          total: {2020: 5.129, 2021: 5.830244, 2022: 8.533471, 2023: 7.496232, 2024: 8.200595},
+          scope1: {2020: 0.029, 2021: 0.055173, 2022: 0.066934, 2023: 0.048952, 2024: 0.047468},
+          scope2: {2020: 0.009, 2021: 0.002487, 2022: 0.000273, 2023: 0.001658, 2024: 0.001358},
+          scope3: {2020: 5.091, 2021: 5.772583, 2022: 8.466264, 2023: 7.445621, 2024: 8.151769}
+        },
+        source: {
+          title: "Meta Environmental Data Index 2025",
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Environmental-Data-Index.pdf",
+          note: "Total GHG emissions with contractual instruments applied, 2020-2024."
+        }
+      },
+      {
+        id: "openai",
+        name: "OpenAI",
+        color: "#0b7f83",
+        selected: false,
+        noCompanyData: true,
+        target: null,
+        actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
+        source: {
+          title: "Ingen offentlig, sammenlignelig &aring;rlig GHG-inventory fundet",
+          url: "https://openai.com/",
+          note: "OpenAI offentligg&oslash;r ikke Scope 1+2+3 virksomhedstal for 2020-2026 i et &aring;rligt sustainability report-format."
+        }
+      },
+      {
+        id: "anthropic",
+        name: "Anthropic",
+        color: "#8b5b2f",
+        selected: false,
+        noCompanyData: true,
+        target: null,
+        actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
+        extraEvidence: "Model-level datapunkt: 493 tCO2e for en modelserie i en 2025 forskningsartikel, ikke en &aring;rlig virksomhedsfootprint.",
+        source: {
+          title: "Holistically Evaluating the Environmental Impact of Creating Language Models",
+          url: "https://arxiv.org/abs/2503.05804",
+          note: "Modeludviklingsdata fra Anthropic-forskere, ikke fuldt Scope 1+2+3 firmaregnskab."
+        }
+      }
+    ];
+
+    const promiseData = [
+      {
+        companyId: "microsoft",
+        status: "Afviger fra m\u00e5lbane",
+        statusClass: "bad",
+        promise: {
+          who: "Microsoft",
+          when: "2030",
+          how: "Carbon negative: reducere mere end halvdelen af egne udledninger, fjerne resten og senere historiske udledninger.",
+          quote: "carbon negative by 2030",
+          sourceTitle: "Microsoft announcement, 2020",
+          url: "https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/"
+        },
+        latest: {
+          when: "FY2024 / rapport 2025",
+          summary: "Total Scope 1+2+3 ligger 23,4% over 2020-baseline; Scope 3 er fortsat den store udfordring ved cloud- og AI-udbygning.",
+          quote: "overall emissions are 23.4% higher",
+          sourceTitle: "Microsoft Environmental Sustainability Report 2025",
+          url: "https://www.microsoft.com/en-us/corporate-responsibility/sustainability/report"
+        }
+      },
+      {
+        companyId: "google",
+        status: "M\u00e5l tonet ned",
+        statusClass: "bad",
+        promise: {
+          who: "Google",
+          when: "2030",
+          how: "Net-zero for drift og v\u00e6rdik\u00e6de, 24/7 carbon-free energy og carbon removals frem for traditionelle offsets.",
+          quote: "net-zero emissions across all of our operations and value chain by 2030",
+          sourceTitle: "Google Environmental Report 2025",
+          url: "https://www.sustainability.google/reports/google-2025-environmental-report/"
+        },
+        latest: {
+          when: "2024-tal / 2025-rapportering",
+          summary: "Udledningerne er 51% over 2019-baseline, og eksterne medier rapporterede i 2025, at net-zero-headlinen blev fjernet fra Googles sustainability-side.",
+          quote: "removed its first headline",
+          sourceTitle: "Tom's Hardware / National Observer, 2025",
+          url: "https://www.tomshardware.com/tech-industry/google-quietly-removes-net-zero-carbon-goal-from-website-amid-rapid-power-hungry-ai-data-center-buildout-industry-first-sustainability-pledge-moved-to-background-amidst-ai-energy-crisis"
+        }
+      },
+      {
+        companyId: "apple",
+        status: "T\u00e6ttere p\u00e5 m\u00e5l",
+        statusClass: "ok",
+        promise: {
+          who: "Apple",
+          when: "2030",
+          how: "75% gross reduction fra 2015-baseline og carbon removal for de resterende emissioner.",
+          quote: "carbon neutral across our entire carbon footprint",
+          sourceTitle: "Apple Environment / Apple 2030",
+          url: "https://www.apple.com/environment/"
+        },
+        latest: {
+          when: "FY2024 / rapport 2025-2026",
+          summary: "Apple rapporterer mere end 60% reduktion fra 2015 og et 2024-footprint p\u00e5 15,3 Mt CO2e, men m\u00e5let kr\u00e6ver yderligere reduktion til ca. 9,6 Mt plus removals.",
+          quote: "reduced emissions by more than 60 percent",
+          sourceTitle: "Apple Environmental Progress Report / Environment",
+          url: "https://www.apple.com/environment/"
+        }
+      },
+      {
+        companyId: "amazon",
+        status: "Stiger igen",
+        statusClass: "bad",
+        promise: {
+          who: "Amazon",
+          when: "2040",
+          how: "The Climate Pledge: net-zero carbon 10 \u00e5r f\u00f8r Paris-aftalens 2050-m\u00e5l.",
+          quote: "net-zero carbon by 2040",
+          sourceTitle: "The Climate Pledge",
+          url: "https://www.theclimatepledge.com/"
+        },
+        latest: {
+          when: "2024",
+          summary: "Amazon faldt i 2023, men steg igen til 68,25 Mt CO2e i 2024, ca. 12,6% over 2020-niveauet.",
+          quote: "increased by 6%",
+          sourceTitle: "Amazon Sustainability Report 2024",
+          url: "https://sustainability.aboutamazon.com/content/dam/sustainability-marketing-site/pdfs/reports-docs/2024-amazon-sustainability-report.pdf"
+        }
+      },
+      {
+        companyId: "meta",
+        status: "Over 2020-niveau",
+        statusClass: "bad",
+        promise: {
+          who: "Meta / Facebook",
+          when: "2030",
+          how: "Net-zero for hele v\u00e6rdik\u00e6den, med 100% vedvarende elmatch og leverand\u00f8rprogrammer som centrale redskaber.",
+          quote: "net zero emissions across our value chain in 2030",
+          sourceTitle: "Meta Sustainability Report",
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Sustainability-Report_.pdf"
+        },
+        latest: {
+          when: "2024 / data index 2025",
+          summary: "Meta rapporterer 8,200595 Mt CO2e i 2024 med kontraktuelle instrumenter, markant over 2020 og domineret af Scope 3.",
+          quote: "8,200,595 metric tons CO2e",
+          sourceTitle: "Meta Environmental Data Index 2025",
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Environmental-Data-Index.pdf"
+        }
+      },
+      {
+        companyId: "openai",
+        status: "Mangler firmadata",
+        statusClass: "missing",
+        promise: {
+          who: "OpenAI",
+          when: "Ingen offentlig 2020-2026 Scope 1+2+3-neutralitetsdeadline fundet",
+          how: "OpenAI beskriver massiv compute-infrastruktur, men offentligg\u00f8r ikke en sammenlignelig \u00e5rlig firmainventory.",
+          quote: "No comparable annual company GHG inventory found",
+          sourceTitle: "OpenAI compute infrastructure statement",
+          url: "https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/"
+        },
+        latest: {
+          when: "2025-2026",
+          summary: "Sammenligning med Microsoft/Google/Amazon er derfor kun mulig via datacenter- og elforbrugsproxier, ikke via OpenAI's egen Scope-rapportering.",
+          quote: "compute infrastructure",
+          sourceTitle: "OpenAI",
+          url: "https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/"
+        }
+      },
+      {
+        companyId: "anthropic",
+        status: "Mangler firmadata",
+        statusClass: "missing",
+        promise: {
+          who: "Anthropic",
+          when: "Ingen offentlig 2020-2026 Scope 1+2+3-neutralitetsdeadline fundet",
+          how: "Der findes model-/forskningsdata for AI-udvikling, men ikke en fuld \u00e5rlig virksomhedsinventory p\u00e5 linje med de store b\u00f8rsnoterede selskaber.",
+          quote: "493 metric tons CO2e",
+          sourceTitle: "Holistically Evaluating the Environmental Impact of Creating Language Models",
+          url: "https://arxiv.org/abs/2503.05804"
+        },
+        latest: {
+          when: "2025",
+          summary: "Det konkrete datapunkt d\u00e6kker modelskabelse og -udvikling, ikke Anthropic's samlede drift, leverand\u00f8rk\u00e6de og datacenterforbrug.",
+          quote: "model creation and development",
+          sourceTitle: "arXiv, 2025",
+          url: "https://arxiv.org/abs/2503.05804"
+        }
+      }
+    ];
+
+    const dataCentreEmissions = [
+      {year: 2020, value: 114.4, type: "Estimat", method: "Bagudregnet fra IEA 2024-niveau med 12% \u00e5rlig v\u00e6kst."},
+      {year: 2021, value: 128.1, type: "Estimat", method: "Bagudregnet fra IEA 2024-niveau med 12% \u00e5rlig v\u00e6kst."},
+      {year: 2022, value: 143.5, type: "Estimat", method: "Bagudregnet fra IEA 2024-niveau med 12% \u00e5rlig v\u00e6kst."},
+      {year: 2023, value: 160.7, type: "Estimat", method: "Bagudregnet fra IEA 2024-niveau med 12% \u00e5rlig v\u00e6kst."},
+      {year: 2024, value: 180.0, type: "IEA-anker", method: "IEA Energy and AI: indirekte CO2 fra elforbrug i datacentre."},
+      {year: 2025, value: 198.1, type: "Prognose", method: "Interpoleret mod IEA base case p\u00e5 ca. 320 Mt CO2 i 2030."},
+      {year: 2026, value: 218.1, type: "Prognose", method: "Interpoleret mod IEA base case p\u00e5 ca. 320 Mt CO2 i 2030."},
+      {year: 2027, value: 240.0, type: "Prognose", method: "Interpoleret mod IEA base case p\u00e5 ca. 320 Mt CO2 i 2030."},
+      {year: 2028, value: 264.2, type: "Prognose", method: "Interpoleret mod IEA base case p\u00e5 ca. 320 Mt CO2 i 2030."},
+      {year: 2029, value: 290.7, type: "Prognose", method: "Interpoleret mod IEA base case p\u00e5 ca. 320 Mt CO2 i 2030."},
+      {year: 2030, value: 320.0, type: "IEA base case", method: "IEA Energy and AI: data centre electricity generation CO2 peaks around 320 Mt by 2030."}
+    ];
+
+    const sectorBenchmarks = [
+      {
+        name: "Datacentre, global",
+        year: "2024",
+        value: 180,
+        color: "#146c63",
+        note: "Elrelaterede indirekte CO2-udledninger.",
+        sourceTitle: "IEA Energy and AI",
+        url: "https://www.iea.org/reports/energy-and-ai/ai-and-climate-change"
+      },
+      {
+        name: "Datacentre, prognose",
+        year: "2030",
+        value: 320,
+        color: "#0b7f83",
+        note: "IEA base case for elrelateret datacenter-CO2.",
+        sourceTitle: "IEA Energy and AI",
+        url: "https://www.iea.org/reports/energy-and-ai/energy-supply-for-ai"
+      },
+      {
+        name: "International luftfart",
+        year: "2024",
+        value: 942,
+        color: "#7a3f98",
+        note: "IATA gross CO2 for airline sector.",
+        sourceTitle: "IATA 2024 Aviation Emissions",
+        url: "https://www.iata.org/en/publications/economics/chart-week/chart-of-the-week-28-november-2025/"
+      },
+      {
+        name: "International shipping",
+        year: "2023",
+        value: 746.9,
+        color: "#b45f13",
+        note: "EDGAR/JRC GHG-emissioner for international shipping.",
+        sourceTitle: "JRC / EDGAR 2024",
+        url: "https://edgar.jrc.ec.europa.eu/report_2024"
+      },
+      {
+        name: "Cementproduktion",
+        year: "2022",
+        value: 2600,
+        color: "#5b6470",
+        note: "Procesemissioner plus fossil varme i cementproduktion, st\u00f8rrelsesorden.",
+        sourceTitle: "Global Carbon Project / CICERO dataset",
+        url: "https://zenodo.org/records/10707604"
+      }
+    ];
+
+    const sectorReferenceLines = sectorBenchmarks
+      .filter((item) => !item.name.startsWith("Datacentre"))
+      .map((item) => ({
+        ...item,
+        type: "Branchereference",
+        method: `${item.name}: seneste datapunkt (${item.year}) vist som vandret reference.`
+      }));
+
+    const climateScenarios = [
+      {
+        name: "IPCC 1,5\u00b0C, no/limited overshoot",
+        shortName: "IPCC 1,5\u00b0C",
+        color: "#7d3f0d",
+        values: {2024: 180, 2030: 102.6},
+        note: "Illustrativt anvendt p\u00e5 datacentres 2024-niveau: 43% reduktion i 2030.",
+        sourceTitle: "IPCC AR6 WGIII SPM",
+        url: "https://www.ipcc.ch/report/ar6/wg3/chapter/summary-for-policymakers/"
+      },
+      {
+        name: "IPCC 2\u00b0C, immediate action",
+        shortName: "IPCC 2\u00b0C",
+        color: "#234c9f",
+        values: {2024: 180, 2030: 131.4},
+        note: "Illustrativt anvendt p\u00e5 datacentres 2024-niveau: 27% reduktion i 2030.",
+        sourceTitle: "IPCC AR6 WGIII SPM",
+        url: "https://www.ipcc.ch/report/ar6/wg3/chapter/summary-for-policymakers/"
+      },
+      {
+        name: "UNEP 1,5\u00b0C 2035-mark\u00f8r",
+        shortName: "UNEP 2035",
+        color: "#a75916",
+        values: {2024: 180, 2030: 126.0},
+        note: "Mellemtrin mod UNEP 2025: 55% reduktion i 2035 relativt til 2019-niveau.",
+        sourceTitle: "UNEP Emissions Gap Report 2025",
+        url: "https://www.unep.org/resources/emissions-gap-report-2025"
+      }
+    ];
+
+    const state = {
+      selectedIds: new Set(companies.filter((company) => company.selected).map((company) => company.id)),
+      metric: "total",
+      expectation: "target",
+      view: "absolute",
+      activeTab: "footprint",
+      startYear: 2020,
+      endYear: 2026
+    };
+
+    const els = {
+      companyList: document.getElementById("companyList"),
+      selectAll: document.getElementById("selectAll"),
+      selectNone: document.getElementById("selectNone"),
+      metricSelect: document.getElementById("metricSelect"),
+      chart: document.getElementById("chart"),
+      chartWrap: document.getElementById("chartWrap"),
+      tooltip: document.getElementById("tooltip"),
+      legend: document.getElementById("legend"),
+      kpis: document.getElementById("kpis"),
+      dataTable: document.getElementById("dataTable"),
+      tableMeta: document.getElementById("tableMeta"),
+      sourceList: document.getElementById("sourceList"),
+      chartTitle: document.getElementById("chartTitle"),
+      chartCopy: document.getElementById("chartCopy"),
+      startYear: document.getElementById("startYear"),
+      endYear: document.getElementById("endYear"),
+      startYearLabel: document.getElementById("startYearLabel"),
+      endYearLabel: document.getElementById("endYearLabel"),
+      expectationHelp: document.getElementById("expectationHelp"),
+      tabButtons: document.querySelectorAll("[data-tab-target]"),
+      tabPanels: document.querySelectorAll("[data-tab-panel]"),
+      promiseCards: document.getElementById("promiseCards"),
+      promiseTable: document.getElementById("promiseTable"),
+      dataChart: document.getElementById("dataChart"),
+      dataChartWrap: document.getElementById("dataChartWrap"),
+      dataTooltip: document.getElementById("dataTooltip"),
+      dataBenchmarks: document.getElementById("dataBenchmarks"),
+      dataTableBody: document.getElementById("dataTableBody"),
+      dataSourceList: document.getElementById("dataSourceList")
+    };
+
+    function actualValue(company, year, metric = state.metric) {
+      return company.actual?.[metric]?.[year] ?? null;
+    }
+
+    function linearValue(startYear, startValue, endYear, endValue, year) {
+      if (year <= startYear) return startValue;
+      const progress = (year - startYear) / (endYear - startYear);
+      return startValue + progress * (endValue - startValue);
+    }
+
+    function targetExpected(company, year, metric = state.metric) {
+      if (!company.target || metric !== "total") return null;
+      return Math.max(0, linearValue(
+        company.target.baselineYear,
+        company.target.baseline,
+        company.target.targetYear,
+        company.target.targetValue,
+        year
+      ));
+    }
+
+    function trendExpected(company, year, metric = state.metric) {
+      const entries = Object.entries(company.actual?.[metric] ?? {})
+        .map(([entryYear, value]) => ({year: Number(entryYear), value}))
+        .filter((entry) => Number.isFinite(entry.value));
+      if (entries.length < 2) return null;
+
+      const n = entries.length;
+      const meanX = entries.reduce((sum, entry) => sum + entry.year, 0) / n;
+      const meanY = entries.reduce((sum, entry) => sum + entry.value, 0) / n;
+      const numerator = entries.reduce((sum, entry) => sum + (entry.year - meanX) * (entry.value - meanY), 0);
+      const denominator = entries.reduce((sum, entry) => sum + Math.pow(entry.year - meanX, 2), 0);
+      const slope = denominator === 0 ? 0 : numerator / denominator;
+      const intercept = meanY - slope * meanX;
+      return Math.max(0, intercept + slope * year);
+    }
+
+    function expectedValue(company, year, metric = state.metric) {
+      if (state.expectation === "trend") return trendExpected(company, year, metric);
+      return targetExpected(company, year, metric);
+    }
+
+    function baselineForIndex(company, metric = state.metric) {
+      const base = actualValue(company, 2020, metric);
+      return base && base > 0 ? base : null;
+    }
+
+    function displayValue(company, value, metric = state.metric) {
+      if (value == null) return null;
+      if (state.view === "index") {
+        const baseline = baselineForIndex(company, metric);
+        return baseline ? (value / baseline) * 100 : null;
+      }
+      return value;
+    }
+
+    function formatNumber(value, options = {}) {
+      if (value == null || Number.isNaN(value)) return "N/A";
+      const maximumFractionDigits = options.maximumFractionDigits ?? (Math.abs(value) < 1 ? 3 : 1);
+      return new Intl.NumberFormat("da-DK", {
+        maximumFractionDigits,
+        minimumFractionDigits: options.minimumFractionDigits ?? 0
+      }).format(value);
+    }
+
+    function formatEmission(value) {
+      if (value == null) return "N/A";
+      if (state.view === "index") return `${formatNumber(value, {maximumFractionDigits: 0})}`;
+      return `${formatNumber(value)} Mt`;
+    }
+
+    function selectedCompanies() {
+      return companies.filter((company) => state.selectedIds.has(company.id));
+    }
+
+    function visibleYears() {
+      return YEARS.filter((year) => year >= state.startYear && year <= state.endYear);
+    }
+
+    function pathFromPoints(points) {
+      return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+    }
+
+    function clearSvg(svg) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function makeSvg(name, attrs = {}) {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+      return node;
+    }
+
+    function renderCompanyToggles() {
+      els.companyList.innerHTML = "";
+      companies.forEach((company) => {
+        const label = document.createElement("label");
+        label.className = "company-toggle";
+        label.innerHTML = `
+          <input type="checkbox" ${state.selectedIds.has(company.id) ? "checked" : ""} data-company="${company.id}">
+          <span><span class="color-dot" style="background:${company.color}"></span><span class="company-name">${company.name}</span></span>
+          <span class="data-badge">${company.noCompanyData ? "mangler" : "data"}</span>
+        `;
+        els.companyList.appendChild(label);
+      });
+    }
+
+    function renderLegend() {
+      const companiesHtml = selectedCompanies()
+        .map((company) => `
+          <span class="legend-item" style="color:${company.color}">
+            <span class="color-dot" style="background:${company.color}"></span>${company.name}
+          </span>
+        `).join("");
+      els.legend.innerHTML = `
+        <span class="legend-item"><span class="legend-line" style="color:#293a33"></span>Faktisk</span>
+        <span class="legend-item"><span class="legend-line expected" style="color:#293a33"></span>Forventet</span>
+        ${companiesHtml}
+      `;
+    }
+
+    function renderChart() {
+      const svg = els.chart;
+      clearSvg(svg);
+      const rect = els.chartWrap.getBoundingClientRect();
+      const width = Math.max(320, rect.width);
+      const height = Math.max(380, rect.height);
+      const margin = {top: 22, right: 26, bottom: 48, left: 68};
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      const years = visibleYears();
+      const active = selectedCompanies().filter((company) => !company.noCompanyData);
+      const allDisplayValues = [];
+
+      active.forEach((company) => {
+        years.forEach((year) => {
+          const actual = displayValue(company, actualValue(company, year));
+          const expected = displayValue(company, expectedValue(company, year));
+          if (actual != null) allDisplayValues.push(actual);
+          if (expected != null) allDisplayValues.push(expected);
+        });
+      });
+
+      if (!active.length || !allDisplayValues.length) {
+        const text = makeSvg("text", {x: width / 2, y: height / 2, class: "empty-state"});
+        text.textContent = "V\u00e6lg mindst en virksomhed med offentlig emissionsdata.";
+        svg.appendChild(text);
+        return;
+      }
+
+      const xMin = Math.min(...years);
+      const xMax = Math.max(...years);
+      const yMin = 0;
+      const rawYMax = Math.max(...allDisplayValues);
+      const yMax = state.view === "index"
+        ? Math.max(120, Math.ceil(rawYMax / 25) * 25)
+        : Math.max(1, Math.ceil(rawYMax * 1.12 / 5) * 5);
+
+      const xScale = (year) => margin.left + ((year - xMin) / Math.max(1, xMax - xMin)) * innerW;
+      const yScale = (value) => margin.top + innerH - ((value - yMin) / (yMax - yMin)) * innerH;
+
+      const plot = makeSvg("g");
+      svg.appendChild(plot);
+
+      if (years.includes(2025)) {
+        const bandX = xScale(2025);
+        const nextX = xScale(2026);
+        plot.appendChild(makeSvg("rect", {
+          class: "forecast-band",
+          x: Math.min(bandX, nextX),
+          y: margin.top,
+          width: Math.max(0, width - Math.min(bandX, nextX) - margin.right),
+          height: innerH
+        }));
+      }
+
+      const grid = makeSvg("g", {class: "grid"});
+      const yTicks = 5;
+      for (let index = 0; index <= yTicks; index += 1) {
+        const value = yMin + (index / yTicks) * (yMax - yMin);
+        const y = yScale(value);
+        grid.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: y, y2: y}));
+        const label = makeSvg("text", {x: margin.left - 12, y: y + 4, class: "grid-label", "text-anchor": "end"});
+        label.textContent = state.view === "index" ? formatNumber(value, {maximumFractionDigits: 0}) : formatNumber(value, {maximumFractionDigits: 0});
+        grid.appendChild(label);
+      }
+      svg.appendChild(grid);
+
+      const xAxis = makeSvg("g", {class: "axis"});
+      xAxis.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: height - margin.bottom, y2: height - margin.bottom}));
+      years.forEach((year) => {
+        const x = xScale(year);
+        xAxis.appendChild(makeSvg("line", {x1: x, x2: x, y1: height - margin.bottom, y2: height - margin.bottom + 6}));
+        const label = makeSvg("text", {x, y: height - margin.bottom + 24, "text-anchor": "middle"});
+        label.textContent = year;
+        xAxis.appendChild(label);
+      });
+      svg.appendChild(xAxis);
+
+      const yAxis = makeSvg("g", {class: "axis"});
+      yAxis.appendChild(makeSvg("line", {x1: margin.left, x2: margin.left, y1: margin.top, y2: height - margin.bottom}));
+      svg.appendChild(yAxis);
+
+      const yLabel = makeSvg("text", {
+        x: margin.left,
+        y: 14,
+        class: "grid-label",
+        "text-anchor": "start"
+      });
+      yLabel.textContent = state.view === "index" ? "Indeks, 2020 = 100" : "Millioner ton CO2e";
+      svg.appendChild(yLabel);
+
+      active.forEach((company) => {
+        const actualPoints = years
+          .map((year) => {
+            const value = displayValue(company, actualValue(company, year));
+            return value == null ? null : {year, value, x: xScale(year), y: yScale(value), type: "Faktisk"};
+          })
+          .filter(Boolean);
+        const expectedPoints = years
+          .map((year) => {
+            const value = displayValue(company, expectedValue(company, year));
+            return value == null ? null : {year, value, x: xScale(year), y: yScale(value), type: "Forventet"};
+          })
+          .filter(Boolean);
+
+        if (expectedPoints.length > 1) {
+          const path = makeSvg("path", {
+            d: pathFromPoints(expectedPoints),
+            class: "series-line expected",
+            stroke: company.color
+          });
+          plot.appendChild(path);
+        }
+
+        if (actualPoints.length > 1) {
+          const path = makeSvg("path", {
+            d: pathFromPoints(actualPoints),
+            class: "series-line",
+            stroke: company.color
+          });
+          plot.appendChild(path);
+        }
+
+        [...expectedPoints, ...actualPoints].forEach((point) => {
+          const circle = makeSvg("circle", {
+            cx: point.x,
+            cy: point.y,
+            r: point.type === "Forventet" ? 4 : 4.8,
+            fill: point.type === "Forventet" ? "#fff" : company.color,
+            stroke: company.color,
+            class: `point ${point.type === "Forventet" ? "expected" : ""}`
+          });
+          circle.addEventListener("mouseenter", () => showTooltip(company, point, circle));
+          circle.addEventListener("mousemove", () => showTooltip(company, point, circle));
+          circle.addEventListener("mouseleave", hideTooltip);
+          plot.appendChild(circle);
+        });
+      });
+    }
+
+    function showTooltip(company, point, circle) {
+      const metricName = METRICS[state.metric];
+      const rawValue = state.view === "index" ? point.value : point.value;
+      els.tooltip.innerHTML = `
+        <strong>${company.name} · ${point.year}</strong>
+        <span>${point.type} · ${metricName}</span>
+        <span>${state.view === "index" ? `${formatNumber(rawValue, {maximumFractionDigits: 0})} indeks` : `${formatNumber(rawValue, {maximumFractionDigits: 3})} Mt CO2e`}</span>
+        <span>${point.type === "Forventet" ? modelLabel(company) : company.source.note}</span>
+      `;
+      const chartBox = els.chartWrap.getBoundingClientRect();
+      const cx = Number(circle.getAttribute("cx"));
+      const cy = Number(circle.getAttribute("cy"));
+      els.tooltip.style.left = `${Math.min(Math.max(cx, 120), chartBox.width - 120)}px`;
+      els.tooltip.style.top = `${Math.max(cy, 88)}px`;
+      els.tooltip.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      els.tooltip.classList.remove("visible");
+    }
+
+    function modelLabel(company) {
+      if (state.expectation === "trend") return "Simpel line&aelig;r trend fra rapporterede datapunkter.";
+      return company.target?.label ?? "Ingen offentlig m&aring;lbane.";
+    }
+
+    function renderKpis() {
+      const metric = state.metric;
+      const rows = selectedCompanies().flatMap((company) => visibleYears().map((year) => ({
+        company,
+        year,
+        actual: actualValue(company, year, metric),
+        expected: expectedValue(company, year, metric)
+      }))).filter((row) => row.actual != null || row.expected != null);
+
+      const actualRows = rows.filter((row) => row.actual != null);
+      const latestActualYear = actualRows.length ? Math.max(...actualRows.map((row) => row.year)) : null;
+      const latestRows = actualRows.filter((row) => row.year === latestActualYear);
+      const largest = latestRows.reduce((best, row) => !best || row.actual > best.actual ? row : best, null);
+
+      const gapRows = rows.filter((row) => row.actual != null && row.expected != null && row.year <= 2024);
+      const largestGap = gapRows.reduce((best, row) => {
+        const gap = row.actual - row.expected;
+        return !best || gap > best.gap ? {...row, gap} : best;
+      }, null);
+
+      const missing = selectedCompanies().filter((company) => company.noCompanyData).length;
+
+      els.kpis.innerHTML = `
+        <div class="kpi">
+          <div class="kpi-label">St&oslash;rste rapporterede footprint</div>
+          <div class="kpi-value">${largest ? largest.company.name : "N/A"}</div>
+          <div class="kpi-extra">${largest ? `${formatNumber(largest.actual)} Mt i ${largest.year}` : "V\u00e6lg en virksomhed med data."}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">St&oslash;rste afstand til forventet</div>
+          <div class="kpi-value">${largestGap ? `${formatNumber(largestGap.gap)} Mt` : "N/A"}</div>
+          <div class="kpi-extra">${largestGap ? `${largestGap.company.name}, ${largestGap.year}` : "Kr&aelig;ver b&aring;de faktisk og forventet data."}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Datamangler</div>
+          <div class="kpi-value">${missing}</div>
+          <div class="kpi-extra">${missing ? "OpenAI/Anthropic mangler &aring;rlige firmatal." : "Alle valgte har sammenlignelige data."}</div>
+        </div>
+      `;
+    }
+
+    function renderTable() {
+      const metric = state.metric;
+      const rows = [];
+      selectedCompanies().forEach((company) => {
+        visibleYears().forEach((year) => {
+          const actual = actualValue(company, year, metric);
+          const expected = expectedValue(company, year, metric);
+          if (actual != null || expected != null || company.noCompanyData) {
+            rows.push({company, year, actual, expected});
+          }
+        });
+      });
+
+      els.dataTable.innerHTML = rows.map((row) => {
+        const gap = row.actual != null && row.expected != null ? row.actual - row.expected : null;
+        const status = row.company.noCompanyData
+          ? `<span class="missing">Mangler firmadata</span>`
+          : row.actual == null
+            ? `<span class="missing">Forventet</span>`
+            : "Rapporteret";
+        return `
+          <tr>
+            <td><span class="color-dot" style="background:${row.company.color}"></span>${row.company.name}</td>
+            <td>${row.year}</td>
+            <td>${row.actual == null ? "N/A" : formatNumber(row.actual, {maximumFractionDigits: 3})}</td>
+            <td>${row.expected == null ? "N/A" : formatNumber(row.expected, {maximumFractionDigits: 3})}</td>
+            <td>${gap == null ? "N/A" : formatNumber(gap, {maximumFractionDigits: 3})}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderSources() {
+      const listed = selectedCompanies();
+      els.sourceList.innerHTML = listed.map((company) => `
+        <li>
+          <a href="${company.source.url}" target="_blank" rel="noreferrer">${company.source.title}</a>
+          <p><strong>${company.name}:</strong> ${company.source.note}${company.extraEvidence ? ` ${company.extraEvidence}` : ""}</p>
+        </li>
+      `).join("");
+    }
+
+    function renderTabs() {
+      els.tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tabTarget === state.activeTab);
+      });
+      els.tabPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.tabPanel === state.activeTab);
+      });
+    }
+
+    function companyById(id) {
+      return companies.find((company) => company.id === id);
+    }
+
+    function renderPromiseCards() {
+      els.promiseCards.innerHTML = promiseData.map((item) => {
+        const company = companyById(item.companyId);
+        const promiseLabel = item.statusClass === "missing" ? "Datastatus" : "L&oslash;fte";
+        const promiseQuote = item.statusClass === "missing" ? item.promise.quote : `&quot;${item.promise.quote}&quot;`;
+        const latestQuote = item.statusClass === "missing" ? item.latest.quote : `&quot;${item.latest.quote}&quot;`;
+        return `
+          <article class="promise-card">
+            <div class="promise-top">
+              <h2><span class="color-dot" style="background:${company.color}"></span>${company.name}</h2>
+              <span class="risk-pill ${item.statusClass}">${item.status}</span>
+            </div>
+            <dl class="promise-detail">
+              <dt>Hvem</dt><dd>${item.promise.who}</dd>
+              <dt>Hvorn&aring;r</dt><dd>${item.promise.when}</dd>
+              <dt>Hvordan</dt><dd>${item.promise.how}</dd>
+              <dt>Nyeste</dt><dd>${item.latest.when}</dd>
+            </dl>
+            <div class="quote-block">
+              <strong>${promiseLabel}</strong>
+              ${promiseQuote}<br>
+              <a class="source-link" href="${item.promise.url}" target="_blank" rel="noreferrer">${item.promise.sourceTitle}</a>
+            </div>
+            <div class="quote-block">
+              <strong>Nyeste sammenligning</strong>
+              ${latestQuote}<br>
+              ${item.latest.summary}<br>
+              <a class="source-link" href="${item.latest.url}" target="_blank" rel="noreferrer">${item.latest.sourceTitle}</a>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      els.promiseTable.innerHTML = promiseData.map((item) => {
+        const company = companyById(item.companyId);
+        return `
+          <tr>
+            <td><span class="color-dot" style="background:${company.color}"></span>${company.name}</td>
+            <td>${item.promise.when}: ${item.statusClass === "missing" ? item.promise.quote : `&quot;${item.promise.quote}&quot;`}</td>
+            <td>${item.promise.how}</td>
+            <td><span class="risk-pill ${item.statusClass}">${item.status}</span> ${item.latest.summary}</td>
+            <td>
+              <a class="source-link" href="${item.promise.url}" target="_blank" rel="noreferrer">L&oslash;fte</a>
+              &middot;
+              <a class="source-link" href="${item.latest.url}" target="_blank" rel="noreferrer">Nyeste</a>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDataCentreChart() {
+      const svg = els.dataChart;
+      clearSvg(svg);
+      const rect = els.dataChartWrap.getBoundingClientRect();
+      const width = Math.max(320, rect.width);
+      const height = Math.max(380, rect.height);
+      const margin = {top: 24, right: 34, bottom: 48, left: 66};
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      const xMin = 2020;
+      const xMax = 2030;
+      const yMin = 80;
+      const yMax = 3200;
+      const logMin = Math.log10(yMin);
+      const logMax = Math.log10(yMax);
+      const xScale = (year) => margin.left + ((year - xMin) / (xMax - xMin)) * innerW;
+      const yScale = (value) => margin.top + innerH - ((Math.log10(value) - logMin) / (logMax - logMin)) * innerH;
+
+      const plot = makeSvg("g");
+      svg.appendChild(plot);
+      plot.appendChild(makeSvg("rect", {
+        class: "projection-area",
+        x: xScale(2025),
+        y: margin.top,
+        width: Math.max(0, width - margin.right - xScale(2025)),
+        height: innerH
+      }));
+
+      const grid = makeSvg("g", {class: "grid"});
+      [100, 200, 500, 1000, 2000, 3000].forEach((value) => {
+        const y = yScale(value);
+        grid.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: y, y2: y}));
+        const label = makeSvg("text", {x: margin.left - 12, y: y + 4, class: "grid-label", "text-anchor": "end"});
+        label.textContent = formatNumber(value, {maximumFractionDigits: 0});
+        grid.appendChild(label);
+      });
+      svg.appendChild(grid);
+
+      const xAxis = makeSvg("g", {class: "axis"});
+      xAxis.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: height - margin.bottom, y2: height - margin.bottom}));
+      for (let year = xMin; year <= xMax; year += 1) {
+        const x = xScale(year);
+        xAxis.appendChild(makeSvg("line", {x1: x, x2: x, y1: height - margin.bottom, y2: height - margin.bottom + 6}));
+        if (year % 2 === 0 || year === 2025 || year === 2030) {
+          const label = makeSvg("text", {x, y: height - margin.bottom + 24, "text-anchor": "middle"});
+          label.textContent = year;
+          xAxis.appendChild(label);
+        }
+      }
+      svg.appendChild(xAxis);
+
+      const yAxis = makeSvg("g", {class: "axis"});
+      yAxis.appendChild(makeSvg("line", {x1: margin.left, x2: margin.left, y1: margin.top, y2: height - margin.bottom}));
+      svg.appendChild(yAxis);
+
+      const yLabel = makeSvg("text", {x: margin.left, y: 15, class: "grid-label", "text-anchor": "start"});
+      yLabel.textContent = "Mt CO2, log-skala";
+      svg.appendChild(yLabel);
+
+      sectorReferenceLines.forEach((item, index) => {
+        const y = yScale(item.value);
+        const x2 = width - margin.right;
+        const line = makeSvg("line", {
+          x1: margin.left,
+          x2,
+          y1: y,
+          y2: y,
+          stroke: item.color,
+          class: "reference-line"
+        });
+        plot.appendChild(line);
+        const label = makeSvg("text", {
+          x: x2 - 4,
+          y: y - 6 - (index % 2) * 2,
+          class: "chart-label",
+          "text-anchor": "end"
+        });
+        label.textContent = `${item.name} (${item.year})`;
+        plot.appendChild(label);
+        const marker = makeSvg("circle", {
+          cx: xScale(2029.65),
+          cy: y,
+          r: 4,
+          fill: item.color,
+          stroke: "#fff",
+          class: "point"
+        });
+        marker.addEventListener("mouseenter", () => showDataTooltip({
+          label: item.name,
+          year: item.year,
+          value: item.value,
+          type: item.type,
+          method: item.method
+        }, marker));
+        marker.addEventListener("mousemove", () => showDataTooltip({
+          label: item.name,
+          year: item.year,
+          value: item.value,
+          type: item.type,
+          method: item.method
+        }, marker));
+        marker.addEventListener("mouseleave", hideDataTooltip);
+        plot.appendChild(marker);
+      });
+
+      climateScenarios.forEach((scenario) => {
+        const scenarioPoints = Object.entries(scenario.values).map(([year, value]) => ({
+          year: Number(year),
+          value,
+          x: xScale(Number(year)),
+          y: yScale(value)
+        }));
+        plot.appendChild(makeSvg("path", {
+          d: pathFromPoints(scenarioPoints),
+          class: "scenario-line",
+          stroke: scenario.color
+        }));
+        const endPoint = scenarioPoints[scenarioPoints.length - 1];
+        const label = makeSvg("text", {
+          x: Math.min(width - margin.right - 4, endPoint.x - 6),
+          y: endPoint.y - 7,
+          class: "chart-label",
+          "text-anchor": "end"
+        });
+        label.textContent = scenario.shortName;
+        plot.appendChild(label);
+        const marker = makeSvg("circle", {
+          cx: endPoint.x,
+          cy: endPoint.y,
+          r: 4,
+          fill: "#fff",
+          stroke: scenario.color,
+          class: "point expected"
+        });
+        marker.addEventListener("mouseenter", () => showDataTooltip({
+          label: scenario.shortName,
+          year: 2030,
+          value: endPoint.value,
+          type: "Klimascenarie",
+          method: scenario.note
+        }, marker));
+        marker.addEventListener("mousemove", () => showDataTooltip({
+          label: scenario.shortName,
+          year: 2030,
+          value: endPoint.value,
+          type: "Klimascenarie",
+          method: scenario.note
+        }, marker));
+        marker.addEventListener("mouseleave", hideDataTooltip);
+        plot.appendChild(marker);
+      });
+
+      const estimatedPoints = dataCentreEmissions
+        .filter((row) => row.year <= 2024)
+        .map((row) => ({...row, x: xScale(row.year), y: yScale(row.value)}));
+      const projectedPoints = dataCentreEmissions
+        .filter((row) => row.year >= 2024)
+        .map((row) => ({...row, x: xScale(row.year), y: yScale(row.value)}));
+
+      plot.appendChild(makeSvg("path", {
+        d: pathFromPoints(estimatedPoints),
+        class: "series-line",
+        stroke: "#146c63"
+      }));
+      plot.appendChild(makeSvg("path", {
+        d: pathFromPoints(projectedPoints),
+        class: "projection-line",
+        stroke: "#146c63"
+      }));
+
+      dataCentreEmissions.forEach((row) => {
+        const point = {...row, x: xScale(row.year), y: yScale(row.value)};
+        const circle = makeSvg("circle", {
+          cx: point.x,
+          cy: point.y,
+          r: point.year >= 2025 ? 4.2 : 5,
+          fill: point.year >= 2025 ? "#fff" : "#146c63",
+          stroke: "#146c63",
+          class: `point ${point.year >= 2025 ? "expected" : ""}`
+        });
+        circle.addEventListener("mouseenter", () => showDataTooltip(point, circle));
+        circle.addEventListener("mousemove", () => showDataTooltip(point, circle));
+        circle.addEventListener("mouseleave", hideDataTooltip);
+        plot.appendChild(circle);
+      });
+    }
+
+    function showDataTooltip(point, circle) {
+      els.dataTooltip.innerHTML = `
+        <strong>${point.label ?? "Datacentre"} · ${point.year}</strong>
+        <span>${formatNumber(point.value, {maximumFractionDigits: 1})} Mt CO2</span>
+        <span>${point.type}</span>
+        <span>${point.method}</span>
+      `;
+      const chartBox = els.dataChartWrap.getBoundingClientRect();
+      const cx = Number(circle.getAttribute("cx"));
+      const cy = Number(circle.getAttribute("cy"));
+      els.dataTooltip.style.left = `${Math.min(Math.max(cx, 120), chartBox.width - 120)}px`;
+      els.dataTooltip.style.top = `${Math.max(cy, 88)}px`;
+      els.dataTooltip.classList.add("visible");
+    }
+
+    function hideDataTooltip() {
+      els.dataTooltip.classList.remove("visible");
+    }
+
+    function renderDataBenchmarks() {
+      const maxValue = Math.max(...sectorBenchmarks.map((item) => item.value));
+      els.dataBenchmarks.innerHTML = sectorBenchmarks.map((item) => `
+        <article class="benchmark-card">
+          <h3><span class="color-dot" style="background:${item.color}"></span>${item.name}</h3>
+          <div class="benchmark-meta">
+            <span>${item.year}</span>
+            <strong>${formatNumber(item.value, {maximumFractionDigits: 1})} Mt CO2</strong>
+          </div>
+          <div class="bar-track" aria-hidden="true">
+            <div class="bar-fill" style="background:${item.color}; width:${Math.max(4, (item.value / maxValue) * 100)}%"></div>
+          </div>
+          <p class="data-note">${item.note} <a class="source-link" href="${item.url}" target="_blank" rel="noreferrer">${item.sourceTitle}</a></p>
+        </article>
+      `).join("");
+    }
+
+    function renderDataTable() {
+      const rows = [
+        ...dataCentreEmissions,
+        ...climateScenarios.map((scenario) => ({
+          year: 2030,
+          value: scenario.values[2030],
+          type: scenario.shortName,
+          method: scenario.note
+        }))
+      ];
+      els.dataTableBody.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${row.year}</td>
+          <td>${formatNumber(row.value, {maximumFractionDigits: 1})}</td>
+          <td>${row.type}</td>
+          <td>${row.method}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderDataSources() {
+      const sources = [
+        {
+          title: "IEA Energy and AI, executive summary",
+          url: "https://www.iea.org/reports/energy-and-ai/executive-summary%C2%A0",
+          note: "415 TWh i 2024, ca. 945 TWh i 2030 og ca. 180 Mt CO2 fra datacentres elforbrug i dag."
+        },
+        {
+          title: "IEA Energy and AI, energy supply section",
+          url: "https://www.iea.org/reports/energy-and-ai/energy-supply-for-ai",
+          note: "CO2 fra elproduktion til datacentre topper omkring 320 Mt CO2 i 2030 i IEA's base case."
+        },
+        {
+          title: "IPCC AR6 WGIII Summary for Policymakers",
+          url: "https://www.ipcc.ch/report/ar6/wg3/chapter/summary-for-policymakers/",
+          note: "1,5 graders pathways: globale GHG-reduktioner p\u00e5 43% i 2030 og global net-zero CO2 i de tidlige 2050'ere."
+        },
+        {
+          title: "UNEP Emissions Gap Report 2025",
+          url: "https://www.unep.org/resources/emissions-gap-report-2025",
+          note: "2035-reduktioner p\u00e5 35% for 2 graders pathways og 55% for 1,5 graders pathways relativt til 2019."
+        },
+        {
+          title: "IATA 2024 Aviation Emissions",
+          url: "https://www.iata.org/en/publications/economics/chart-week/chart-of-the-week-28-november-2025/",
+          note: "Global airline-sector gross CO2 i 2024: 942 Mt."
+        },
+        {
+          title: "JRC / EDGAR 2024 report",
+          url: "https://edgar.jrc.ec.europa.eu/report_2024",
+          note: "International shipping i 2023: 746,9 MtCO2e."
+        },
+        {
+          title: "Global Carbon Project / CICERO cement dataset",
+          url: "https://zenodo.org/records/10707604",
+          note: "Cement 2022: ca. 1,6 Gt CO2 procesemissioner plus ca. 1,0 Gt CO2 fra fossil varme."
+        }
+      ];
+      els.dataSourceList.innerHTML = sources.map((source) => `
+        <li>
+          <a href="${source.url}" target="_blank" rel="noreferrer">${source.title}</a>
+          <p>${source.note}</p>
+        </li>
+      `).join("");
+    }
+
+    function renderCopy() {
+      const metricName = METRICS[state.metric];
+      els.chartTitle.textContent = `${metricName}, faktisk vs forventet`;
+      els.tableMeta.innerHTML = state.view === "index" ? "Indeks, 2020 = 100" : "Mt CO<sub>2</sub>e";
+      els.expectationHelp.innerHTML = state.expectation === "target"
+        ? "M&aring;lbanen er line&aelig;r og bygger p&aring; offentlige klimam&aring;l. Den vises kun for totaludledninger, fordi scope-specifikke m&aring;l ikke er ensartede."
+        : "Datatrenden er en simpel line&aelig;r regression p&aring; rapporterede datapunkter og forl&aelig;nges til 2026. Den er en model, ikke et selskabsforecast.";
+      els.chartCopy.innerHTML = state.expectation === "target"
+        ? "Fuld streg er rapporterede faktiske tal. Stiplet streg er en line&aelig;r m&aring;lbane mod virksomhedernes offentlige klimam&aring;l. For Scope 1, 2 og 3 vises m&aring;lbanen kun, hvis den kan udledes forsvarligt."
+        : "Fuld streg er rapporterede faktiske tal. Stiplet streg er en datadrevet line&aelig;r trend baseret p&aring; de tilg&aelig;ngelige rapporterede &aring;r, forl&aelig;nget til 2026.";
+    }
+
+    function render() {
+      renderTabs();
+      renderCopy();
+      renderCompanyToggles();
+      renderLegend();
+      renderChart();
+      renderKpis();
+      renderTable();
+      renderSources();
+      renderPromiseCards();
+      renderDataCentreChart();
+      renderDataBenchmarks();
+      renderDataTable();
+      renderDataSources();
+      els.startYearLabel.textContent = state.startYear;
+      els.endYearLabel.textContent = state.endYear;
+    }
+
+    function bindEvents() {
+      els.tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeTab = button.dataset.tabTarget;
+          render();
+        });
+      });
+
+      els.companyList.addEventListener("change", (event) => {
+        const input = event.target.closest("input[data-company]");
+        if (!input) return;
+        if (input.checked) state.selectedIds.add(input.dataset.company);
+        else state.selectedIds.delete(input.dataset.company);
+        render();
+      });
+
+      els.selectAll.addEventListener("click", () => {
+        companies.forEach((company) => state.selectedIds.add(company.id));
+        render();
+      });
+
+      els.selectNone.addEventListener("click", () => {
+        state.selectedIds.clear();
+        render();
+      });
+
+      els.metricSelect.addEventListener("change", (event) => {
+        state.metric = event.target.value;
+        render();
+      });
+
+      document.querySelectorAll("[data-expectation]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.expectation = button.dataset.expectation;
+          document.querySelectorAll("[data-expectation]").forEach((node) => node.classList.toggle("active", node === button));
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.view = button.dataset.view;
+          document.querySelectorAll("[data-view]").forEach((node) => node.classList.toggle("active", node === button));
+          render();
+        });
+      });
+
+      els.startYear.addEventListener("input", (event) => {
+        state.startYear = Number(event.target.value);
+        if (state.startYear > state.endYear) {
+          state.endYear = state.startYear;
+          els.endYear.value = state.endYear;
+        }
+        render();
+      });
+
+      els.endYear.addEventListener("input", (event) => {
+        state.endYear = Number(event.target.value);
+        if (state.endYear < state.startYear) {
+          state.startYear = state.endYear;
+          els.startYear.value = state.startYear;
+        }
+        render();
+      });
+
+      window.addEventListener("resize", () => {
+        window.requestAnimationFrame(() => {
+          renderChart();
+          renderDataCentreChart();
+        });
+      });
+    }
+
+    bindEvents();
+    render();
+  </script>
+</body>
+</html>
