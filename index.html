@@ -38,17 +38,17 @@
     }
 
     main {
-      width: min(1480px, calc(100vw - 32px));
+      width: min(1540px, calc(100vw - 24px));
       margin: 0 auto;
-      padding: 24px 0 36px;
+      padding: 18px 0 36px;
     }
 
     header {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: end;
-      padding: 6px 2px 18px;
+      gap: 18px;
+      align-items: start;
+      padding: 12px 2px 18px;
       border-bottom: 1px solid var(--line);
     }
 
@@ -80,6 +80,22 @@
       white-space: nowrap;
     }
 
+    .header-actions {
+      display: grid;
+      gap: 10px;
+      justify-items: end;
+      align-content: start;
+    }
+
+    .sidebar-toggle {
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow);
+      min-height: 40px;
+      font-weight: 800;
+    }
+
     .tabs {
       display: flex;
       flex-wrap: wrap;
@@ -109,7 +125,7 @@
     .footprint-layout,
     .dashboard {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
       gap: 18px;
       margin-top: 18px;
       align-items: start;
@@ -121,14 +137,32 @@
 
     .footprint-layout .content {
       grid-column: 1;
+      order: 1;
+      min-width: 0;
     }
 
-    .footprint-layout.collapsed {
+    .content {
+      order: 1;
+      min-width: 0;
+    }
+
+    .dashboard > aside {
+      order: 2;
+      min-width: 0;
+    }
+
+    body.filters-hidden .footprint-layout,
+    body.filters-hidden .dashboard {
       grid-template-columns: 1fr;
     }
 
-    .footprint-layout.collapsed aside {
+    body.filters-hidden .footprint-layout aside,
+    body.filters-hidden .dashboard > aside {
       display: none;
+    }
+
+    body.filters-hidden .content {
+      order: 1;
     }
 
     aside,
@@ -147,7 +181,8 @@
       top: 14px;
     }
 
-    .filter-toggle {
+    .filter-toggle,
+    .sidebar-toggle {
       border: 1px solid var(--line);
       background: #fbfcfa;
       border-radius: 7px;
@@ -160,7 +195,8 @@
       transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
     }
 
-    .filter-toggle:hover {
+    .filter-toggle:hover,
+    .sidebar-toggle:hover {
       border-color: var(--strong-line);
       transform: translateY(-1px);
     }
@@ -866,6 +902,11 @@
         position: static;
       }
 
+      .dashboard > aside,
+      .content {
+        order: initial;
+      }
+
       .chart-top {
         grid-template-columns: 1fr;
       }
@@ -883,6 +924,10 @@
 
       header {
         grid-template-columns: 1fr;
+      }
+
+      .header-actions {
+        justify-items: start;
       }
 
       .status-chip {
@@ -925,7 +970,10 @@
           OpenAI og Anthropic er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige &aring;rlige Scope 1, 2 og 3-tal.
         </p>
       </div>
-      <div class="status-chip">Senest verificeret: 6. juni 2026</div>
+      <div class="header-actions">
+        <div class="status-chip">Senest verificeret: 6. juni 2026</div>
+        <button id="toggleFilters" class="sidebar-toggle" type="button" aria-pressed="false">Skjul filtre</button>
+      </div>
     </header>
 
     <nav class="tabs" aria-label="Faner">
@@ -1703,12 +1751,29 @@
       }
     ];
 
+    function readStoredFlag(key) {
+      try {
+        return localStorage.getItem(key) === "1";
+      } catch {
+        return false;
+      }
+    }
+
+    function writeStoredFlag(key, value) {
+      try {
+        localStorage.setItem(key, value ? "1" : "0");
+      } catch {
+        return;
+      }
+    }
+
     const state = {
       selectedIds: new Set(companies.filter((company) => company.selected).map((company) => company.id)),
       metric: "total",
       expectation: "target",
       view: "absolute",
       activeTab: "footprint",
+      filtersHidden: readStoredFlag("filtersHidden"),
       startYear: 2020,
       endYear: 2026
     };
@@ -1732,6 +1797,7 @@
       endYear: document.getElementById("endYear"),
       startYearLabel: document.getElementById("startYearLabel"),
       endYearLabel: document.getElementById("endYearLabel"),
+      toggleFilters: document.getElementById("toggleFilters"),
       expectationHelp: document.getElementById("expectationHelp"),
       filterToggle: document.getElementById("filterToggle"),
       filterToggleAside: document.getElementById("filterToggleAside"),
@@ -2127,6 +2193,12 @@
       els.tabPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.dataset.tabPanel === state.activeTab);
       });
+    }
+
+    function applyFilterVisibility() {
+      document.body.classList.toggle("filters-hidden", state.filtersHidden);
+      els.toggleFilters.textContent = state.filtersHidden ? "Vis filtre" : "Skjul filtre";
+      els.toggleFilters.setAttribute("aria-pressed", String(state.filtersHidden));
     }
 
     function companyById(id) {
@@ -2540,6 +2612,7 @@
     }
 
     function render() {
+      applyFilterVisibility();
       renderTabs();
       renderCopy();
       renderCompanyToggles();
@@ -2560,6 +2633,12 @@
     }
 
     function bindEvents() {
+      els.toggleFilters.addEventListener("click", () => {
+        state.filtersHidden = !state.filtersHidden;
+        writeStoredFlag("filtersHidden", state.filtersHidden);
+        render();
+      });
+
       els.tabButtons.forEach((button) => {
         button.addEventListener("click", () => {
           state.activeTab = button.dataset.tabTarget;
