@@ -122,47 +122,32 @@
       display: block;
     }
 
-    .footprint-layout,
-    .dashboard {
+    .footprint-layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+      grid-template-areas: "content sidebar";
       gap: 18px;
       margin-top: 18px;
       align-items: start;
     }
 
-    .footprint-layout aside {
-      grid-column: 2;
-    }
-
-    .footprint-layout .content {
-      grid-column: 1;
-      order: 1;
+    .footprint-layout > .content {
+      grid-area: content;
       min-width: 0;
     }
 
-    .content {
-      order: 1;
+    .footprint-layout > aside {
+      grid-area: sidebar;
       min-width: 0;
     }
 
-    .dashboard > aside {
-      order: 2;
-      min-width: 0;
+    body.filters-hidden .footprint-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "content";
     }
 
-    body.filters-hidden .footprint-layout,
-    body.filters-hidden .dashboard {
-      grid-template-columns: 1fr;
-    }
-
-    body.filters-hidden .footprint-layout aside,
-    body.filters-hidden .dashboard > aside {
+    body.filters-hidden .footprint-layout > aside {
       display: none;
-    }
-
-    body.filters-hidden .content {
-      order: 1;
     }
 
     aside,
@@ -181,7 +166,6 @@
       top: 14px;
     }
 
-    .filter-toggle,
     .sidebar-toggle {
       border: 1px solid var(--line);
       background: #fbfcfa;
@@ -195,22 +179,9 @@
       transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
     }
 
-    .filter-toggle:hover,
     .sidebar-toggle:hover {
       border-color: var(--strong-line);
       transform: translateY(-1px);
-    }
-
-    .filter-header {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 14px;
-    }
-
-    .filter-toggle--aside {
-      width: auto;
-      padding: 8px 12px;
-      font-size: 0.9rem;
     }
 
     .control-block + .control-block {
@@ -891,20 +862,15 @@
 
     @media (max-width: 1060px) {
       .footprint-layout,
-      .dashboard,
       .below-grid,
       .data-layout,
       .promise-grid {
         grid-template-columns: 1fr;
+        grid-template-areas: "content" "sidebar";
       }
 
       aside {
         position: static;
-      }
-
-      .dashboard > aside,
-      .content {
-        order: initial;
       }
 
       .chart-top {
@@ -986,9 +952,6 @@
     <section class="view-panel active" id="panel-footprint" data-tab-panel="footprint">
       <div class="footprint-layout">
       <aside class="filter-sidebar" aria-label="Kontroller">
-        <div class="filter-header">
-          <button id="filterToggleAside" type="button" class="filter-toggle filter-toggle--aside" aria-expanded="true">Skjul filtre</button>
-        </div>
         <div class="control-block">
           <div class="control-title">Virksomheder</div>
           <div class="button-row" aria-label="V&aelig;lg virksomheder">
@@ -1055,10 +1018,7 @@
                 &aring;rlige emissioner.
               </p>
             </div>
-            <div class="chart-top-actions">
-              <div class="legend" id="legend"></div>
-              <button id="filterToggle" type="button" class="filter-toggle" aria-expanded="true">Skjul filtre</button>
-            </div>
+            <div class="legend" id="legend"></div>
           </div>
           <div class="chart-wrap" id="chartWrap">
             <svg id="chart" role="img" aria-label="CO2e-graf"></svg>
@@ -1799,8 +1759,6 @@
       endYearLabel: document.getElementById("endYearLabel"),
       toggleFilters: document.getElementById("toggleFilters"),
       expectationHelp: document.getElementById("expectationHelp"),
-      filterToggle: document.getElementById("filterToggle"),
-      filterToggleAside: document.getElementById("filterToggleAside"),
       tabButtons: document.querySelectorAll("[data-tab-target]"),
       tabPanels: document.querySelectorAll("[data-tab-panel]"),
       promiseCards: document.getElementById("promiseCards"),
@@ -2597,20 +2555,6 @@
         : "Fuld streg er rapporterede tal. Stiplet streg er en datadrevet lineær trend baseret på de tilgængelige år, forlænget til 2026.";
     }
 
-    function updateFilterToggle() {
-      const layout = document.querySelector(".footprint-layout");
-      const hidden = layout?.classList.contains("collapsed");
-      const label = hidden ? "Vis filtre" : "Skjul filtre";
-      if (els.filterToggle) {
-        els.filterToggle.textContent = label;
-        els.filterToggle.setAttribute("aria-expanded", String(!hidden));
-      }
-      if (els.filterToggleAside) {
-        els.filterToggleAside.textContent = label;
-        els.filterToggleAside.setAttribute("aria-expanded", String(!hidden));
-      }
-    }
-
     function render() {
       applyFilterVisibility();
       renderTabs();
@@ -2629,7 +2573,6 @@
       renderAiResources();
       els.startYearLabel.textContent = state.startYear;
       els.endYearLabel.textContent = state.endYear;
-      updateFilterToggle();
     }
 
     function bindEvents() {
@@ -2702,19 +2645,6 @@
         }
         render();
       });
-
-      const filterLayout = document.querySelector(".footprint-layout");
-      const toggleFilter = () => {
-        if (!filterLayout) return;
-        filterLayout.classList.toggle("collapsed");
-        updateFilterToggle();
-      };
-      if (els.filterToggle && filterLayout) {
-        els.filterToggle.addEventListener("click", toggleFilter);
-      }
-      if (els.filterToggleAside && filterLayout) {
-        els.filterToggleAside.addEventListener("click", toggleFilter);
-      }
 
       window.addEventListener("resize", () => {
         window.requestAnimationFrame(() => {
