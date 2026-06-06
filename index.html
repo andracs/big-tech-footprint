@@ -783,6 +783,232 @@
       margin-top: 12px;
     }
 
+    .ai-dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+      gap: 14px;
+      align-items: start;
+      margin-top: 14px;
+    }
+
+    .ai-stage,
+    .ai-side-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(251, 252, 250, 0.84);
+      padding: 13px;
+    }
+
+    .ai-lens-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ai-lens-button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: #1b2c26;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .ai-lens-button.active {
+      background: rgba(20, 108, 99, 0.13);
+      border-color: rgba(20, 108, 99, 0.45);
+      color: var(--accent);
+    }
+
+    .ai-lens-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .ai-lens-head h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .ai-lens-head span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 750;
+    }
+
+    .ai-lens-copy {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+
+    .ai-scale-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .ai-scale-group {
+      display: grid;
+      gap: 9px;
+    }
+
+    .ai-group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      font-weight: 850;
+    }
+
+    .ai-group-head span {
+      text-transform: none;
+      font-weight: 750;
+    }
+
+    .ai-scale-row {
+      display: grid;
+      grid-template-columns: minmax(142px, 0.36fr) minmax(0, 1fr) minmax(86px, auto);
+      gap: 12px;
+      align-items: center;
+      min-height: 48px;
+    }
+
+    .ai-scale-label strong,
+    .ai-scale-value strong {
+      display: block;
+      line-height: 1.2;
+    }
+
+    .ai-scale-label span,
+    .ai-scale-value span {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.25;
+    }
+
+    .ai-scale-track {
+      position: relative;
+      height: 16px;
+      border-radius: 999px;
+      background: #e7ece5;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(27, 44, 38, 0.04);
+    }
+
+    .ai-scale-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      min-width: 4px;
+      border-radius: inherit;
+      transition: width 220ms ease, left 220ms ease;
+    }
+
+    .ai-scale-fill.range {
+      min-width: 10px;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+    }
+
+    .ai-callout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .ai-callout {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 10px;
+      min-height: 96px;
+    }
+
+    .ai-callout strong {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.15;
+      color: #10251f;
+      margin-bottom: 5px;
+    }
+
+    .ai-callout span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .ai-side-panel h3 {
+      margin: 0 0 9px;
+      font-size: 1rem;
+    }
+
+    .ai-spark {
+      display: grid;
+      gap: 9px;
+    }
+
+    .ai-spark-item {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 9px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(209, 217, 209, 0.75);
+    }
+
+    .ai-spark-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(20, 108, 99, 0.11);
+      color: var(--accent);
+      font-weight: 900;
+      font-size: 0.82rem;
+    }
+
+    .ai-spark-item strong {
+      display: block;
+      line-height: 1.2;
+    }
+
+    .ai-spark-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+      margin-top: 3px;
+    }
+
+    .ai-material-dots {
+      display: grid;
+      grid-template-columns: repeat(8, 10px);
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .ai-material-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.86;
+    }
+
     .benchmark-card {
       box-shadow: none;
       background: #fbfcfa;
@@ -869,6 +1095,7 @@
       .footprint-layout,
       .below-grid,
       .data-layout,
+      .ai-dashboard,
       .promise-grid {
         grid-template-columns: 1fr;
         grid-template-areas: "content" "sidebar";
@@ -909,8 +1136,21 @@
       .segmented,
       .range-grid,
       .kpi-row,
+      .ai-lens-controls,
+      .ai-callout-grid,
       .ai-explain-grid {
         grid-template-columns: 1fr;
+      }
+
+      .ai-scale-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .ai-scale-value {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
       }
 
       .tabs {
@@ -1199,7 +1439,22 @@
             </p>
           </div>
         </div>
-        <div class="benchmark-list" id="aiPowerCards"></div>
+        <div class="ai-dashboard">
+          <div class="ai-stage">
+            <div class="ai-lens-controls" id="aiLensControls" aria-label="Vælg AI-ressourcevisning"></div>
+            <div class="ai-lens-head">
+              <h3 id="aiLensTitle"></h3>
+              <span id="aiLensUnit"></span>
+            </div>
+            <p class="ai-lens-copy" id="aiLensCopy"></p>
+            <div class="ai-scale-list" id="aiScaleList"></div>
+            <div class="ai-callout-grid" id="aiCalloutGrid"></div>
+          </div>
+          <aside class="ai-side-panel" aria-label="AI-ressourceindsigter">
+            <h3>Hvad sammenlignes?</h3>
+            <div class="ai-spark" id="aiPowerCards"></div>
+          </aside>
+        </div>
         <div class="kpi-row" id="aiKpiRow"></div>
         <div class="benchmark-list ai-explain-grid" id="aiExplainCards"></div>
         <div class="method-box">
@@ -1692,6 +1947,109 @@
       }
     ];
 
+    const aiLensData = {
+      power: {
+        label: "Strøm",
+        title: "Strøm: fra prompt til elnet",
+        unit: "TWh/år for sektor-tal",
+        copy: "Her er prompt-skalaen holdt adskilt fra datacenter-skalaen. Det gør forskellen tydelig: en prompt kan være lille, mens den samlede infrastruktur vokser meget hurtigt.",
+        groups: [
+          {
+            label: "Datacenter-el",
+            unit: "TWh/år",
+            max: 945,
+            rows: [
+              {label: "USA datacentre", detail: "DOE/LBNL, 2023", value: 176, display: "176 TWh", color: "#7a3f98"},
+              {label: "Global datacenter-el", detail: "IEA, 2024", value: 415, display: "415 TWh", color: "#146c63"},
+              {label: "USA datacentre", detail: "DOE/LBNL, 2028-scenarie", start: 325, value: 580, display: "325-580 TWh", color: "#a75916"},
+              {label: "Global datacenter-el", detail: "IEA base case, 2030", value: 945, display: "945 TWh", color: "#1d6b4f"}
+            ]
+          }
+        ],
+        callouts: [
+          {value: "0,24 Wh", label: "Googles fuld-stack-måling for én median Gemini Apps tekstprompt."},
+          {value: "≈ 4.167 prompts/kWh", label: "Afledt af Google-tallet. Det viser mikro-skalaen, ikke sektorens total."},
+          {value: "2,3x", label: "IEA's 2030-base case sammenlignet med global datacenter-el i 2024."}
+        ],
+        sparks: [
+          {mark: "Wh", title: "Prompt-skala", text: "0,24 Wh pr. median Gemini Apps tekstprompt. Godt til metode, ikke nok til hele klimabilledet."},
+          {mark: "TWh", title: "Sektor-skala", text: "415 TWh i 2024 og 945 TWh i 2030 hos IEA. Her bliver AI et elnet-spørgsmål."},
+          {mark: "US", title: "Regional flaskehals", text: "DOE/LBNL viser, at USA kan nå 325-580 TWh i 2028 alene for datacentre."}
+        ]
+      },
+      impact: {
+        label: "CO2 & vand",
+        title: "CO2 og vand: intervaller betyder mere end punkt-tal",
+        unit: "Mt CO2e og mio. m3/år",
+        copy: "Denne visning viser usikkerhedsintervaller. AI-servernes effekt afhænger især af placering, elmix, køling og hvor meget hardware der står reserveret til spidsbelastning.",
+        groups: [
+          {
+            label: "CO2e fra el og serverudbygning",
+            unit: "Mt CO2e/år",
+            max: 320,
+            rows: [
+              {label: "AI-servere i USA", detail: "Nature Sustainability, 2024-2030", start: 24, value: 44, display: "24-44 Mt", color: "#7a3f98"},
+              {label: "Global datacenter-CO2", detail: "IEA-anker, 2024", value: 180, display: "180 Mt", color: "#146c63"},
+              {label: "Global datacenter-CO2", detail: "IEA base case, 2030", value: 320, display: "320 Mt", color: "#1d6b4f"}
+            ]
+          },
+          {
+            label: "Vandaftryk for AI-servere",
+            unit: "mio. m3/år",
+            max: 1125,
+            rows: [
+              {label: "AI-servere i USA", detail: "Nature Sustainability, 2024-2030", start: 731, value: 1125, display: "731-1.125 mio. m3", color: "#0b7f83"},
+              {label: "Indirekte vandandel", detail: "elproduktion i servermodellen", value: 799, display: "≈ 71% af high-case", color: "#5b6470"}
+            ]
+          }
+        ],
+        callouts: [
+          {value: "24-44 Mt", label: "Ekstra årlige CO2e-emissioner fra AI-servere i USA i Nature-scenarier."},
+          {value: "731-1.125 mio. m3", label: "Årligt vandaftryk for AI-servere i USA i samme scenarier."},
+          {value: "71%", label: "Indirekte vand fra elproduktion i Nature-modellen."}
+        ],
+        sparks: [
+          {mark: "CO2", title: "Ikke kun køling", text: "CO2 afhænger af elmixet. Samme compute kan have meget forskelligt aftryk i forskellige net."},
+          {mark: "H2O", title: "Vand følger strømmen", text: "En stor del af vandaftrykket ligger indirekte i elproduktionen, ikke kun i datacentrets kølesystem."},
+          {mark: "Geo", title: "Placering er styring", text: "Hvor datacentre bygges, bestemmer både CO2-intensitet, vandstress og netbelastning."}
+        ]
+      },
+      hardware: {
+        label: "Hardware",
+        title: "Hardware: den del, der ikke ses i prompt-tallet",
+        unit: "Mt e-waste og materialer",
+        copy: "AI-ressourcer er også chips, servere, materialer og udskiftningshastighed. Derfor skal hardware med i billedet, selv når strømdata dominerer debatten.",
+        groups: [
+          {
+            label: "E-waste fra generativ AI",
+            unit: "Mt akkumuleret, 2020-2030",
+            max: 5,
+            rows: [
+              {label: "Generativ AI", detail: "Nature Computational Science", start: 1.2, value: 5.0, display: "1,2-5,0 Mt", color: "#8b5b2f"}
+            ]
+          },
+          {
+            label: "Materialekompleksitet",
+            unit: "antal elementer",
+            max: 32,
+            rows: [
+              {label: "A100 GPU-materialeprofil", detail: "Communications Earth & Environment", value: 32, display: "32 elementer", color: "#0b7f83"}
+            ]
+          }
+        ],
+        callouts: [
+          {value: "1,2-5,0 Mt", label: "Mulig akkumuleret e-waste fra generativ AI i 2020-2030."},
+          {value: "32 elementer", label: "Materialeprofil for en A100 GPU i Communications Earth & Environment."},
+          {value: "Levetid", label: "Længere brug, genbrug og cirkulære indkøb er centrale modtræk.", dots: 32}
+        ],
+        sparks: [
+          {mark: "GPU", title: "Chips er klimadata", text: "Træning og inferens kræver specialiseret hardware med kompleks materialekæde."},
+          {mark: "Mt", title: "Affald er scenarie", text: "E-waste-tallet er ikke uundgåeligt, men afhænger af tempoet i udskiftning og genbrug."},
+          {mark: "32", title: "Materialer", text: "AI-regnskaber bør også omfatte mineraler, metaller og produktlevetid."}
+        ]
+      }
+    };
+
     const aiExplainCards = [
       {
         title: "Systemgrænsen afgør tallet",
@@ -1823,6 +2181,7 @@
       expectation: "target",
       view: "absolute",
       activeTab: "footprint",
+      aiLens: "power",
       filtersHidden: readStoredFlag("filtersHidden"),
       startYear: 2020,
       endYear: 2026
@@ -1857,6 +2216,12 @@
       dataChartWrap: document.getElementById("dataChartWrap"),
       dataTooltip: document.getElementById("dataTooltip"),
       dataBenchmarks: document.getElementById("dataBenchmarks"),
+      aiLensControls: document.getElementById("aiLensControls"),
+      aiLensTitle: document.getElementById("aiLensTitle"),
+      aiLensUnit: document.getElementById("aiLensUnit"),
+      aiLensCopy: document.getElementById("aiLensCopy"),
+      aiScaleList: document.getElementById("aiScaleList"),
+      aiCalloutGrid: document.getElementById("aiCalloutGrid"),
       aiPowerCards: document.getElementById("aiPowerCards"),
       aiKpiRow: document.getElementById("aiKpiRow"),
       aiExplainCards: document.getElementById("aiExplainCards"),
@@ -2608,17 +2973,65 @@
     }
 
     function renderAiResources() {
-      els.aiPowerCards.innerHTML = aiResourceFacts.map((item) => `
-        <article class="benchmark-card">
-          <h3>${item.label}</h3>
-          <div class="benchmark-meta">
-            <strong>${item.value}</strong>
+      const activeLens = aiLensData[state.aiLens] ?? aiLensData.power;
+
+      els.aiLensControls.innerHTML = Object.entries(aiLensData).map(([key, lens]) => `
+        <button class="ai-lens-button ${key === state.aiLens ? "active" : ""}" type="button" data-ai-lens="${key}" aria-pressed="${key === state.aiLens}">
+          ${lens.label}
+        </button>
+      `).join("");
+
+      els.aiLensTitle.textContent = activeLens.title;
+      els.aiLensUnit.textContent = activeLens.unit;
+      els.aiLensCopy.textContent = activeLens.copy;
+
+      els.aiScaleList.innerHTML = activeLens.groups.map((group) => `
+        <div class="ai-scale-group">
+          <div class="ai-group-head">
+            <strong>${group.label}</strong>
+            <span>${group.unit}</span>
           </div>
-          <div class="bar-track" aria-hidden="true">
-            <div class="bar-fill" style="background:${item.color}; width:75%"></div>
+          ${group.rows.map((row) => {
+            const start = row.start ?? 0;
+            const end = row.value;
+            const left = Math.max(0, Math.min(100, (start / group.max) * 100));
+            const width = Math.max(row.start == null ? 4 : 8, Math.min(100 - left, ((end - start) / group.max) * 100));
+            const rangeClass = row.start == null ? "" : " range";
+            return `
+              <div class="ai-scale-row">
+                <div class="ai-scale-label">
+                  <strong>${row.label}</strong>
+                  <span>${row.detail}</span>
+                </div>
+                <div class="ai-scale-track" aria-hidden="true">
+                  <div class="ai-scale-fill${rangeClass}" style="left:${left}%; width:${width}%; background:${row.color}"></div>
+                </div>
+                <div class="ai-scale-value">
+                  <strong>${row.display}</strong>
+                  <span>${row.start == null ? "punkt" : "interval"}</span>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `).join("");
+
+      els.aiCalloutGrid.innerHTML = activeLens.callouts.map((item) => `
+        <div class="ai-callout">
+          <strong>${item.value}</strong>
+          <span>${item.label}</span>
+          ${item.dots ? `<div class="ai-material-dots" aria-hidden="true">${Array.from({length: item.dots}, () => `<i class="ai-material-dot"></i>`).join("")}</div>` : ""}
+        </div>
+      `).join("");
+
+      els.aiPowerCards.innerHTML = activeLens.sparks.map((item) => `
+        <div class="ai-spark-item">
+          <div class="ai-spark-icon">${item.mark}</div>
+          <div>
+            <strong>${item.title}</strong>
+            <span>${item.text}</span>
           </div>
-          <p class="data-note">${item.note}</p>
-        </article>
+        </div>
       `).join("");
 
       els.aiKpiRow.innerHTML = aiKpiFacts.map((item) => `
@@ -2692,6 +3105,13 @@
           state.activeTab = button.dataset.tabTarget;
           render();
         });
+      });
+
+      els.aiLensControls.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-ai-lens]");
+        if (!button) return;
+        state.aiLens = button.dataset.aiLens;
+        render();
       });
 
       els.companyList.addEventListener("change", (event) => {
