@@ -162,6 +162,18 @@
       transform: translateY(-1px);
     }
 
+    .filter-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 14px;
+    }
+
+    .filter-toggle--aside {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+    }
+
     .control-block + .control-block {
       border-top: 1px solid var(--line);
       margin-top: 15px;
@@ -923,6 +935,9 @@
     <section class="view-panel active" id="panel-footprint" data-tab-panel="footprint">
       <div class="footprint-layout">
       <aside class="filter-sidebar" aria-label="Kontroller">
+        <div class="filter-header">
+          <button id="filterToggleAside" type="button" class="filter-toggle filter-toggle--aside" aria-expanded="true">Skjul filtre</button>
+        </div>
         <div class="control-block">
           <div class="control-title">Virksomheder</div>
           <div class="button-row" aria-label="V&aelig;lg virksomheder">
@@ -1716,6 +1731,7 @@
       endYearLabel: document.getElementById("endYearLabel"),
       expectationHelp: document.getElementById("expectationHelp"),
       filterToggle: document.getElementById("filterToggle"),
+      filterToggleAside: document.getElementById("filterToggleAside"),
       tabButtons: document.querySelectorAll("[data-tab-target]"),
       tabPanels: document.querySelectorAll("[data-tab-panel]"),
       promiseCards: document.getElementById("promiseCards"),
@@ -2509,9 +2525,15 @@
     function updateFilterToggle() {
       const layout = document.querySelector(".footprint-layout");
       const hidden = layout?.classList.contains("collapsed");
-      if (!els.filterToggle) return;
-      els.filterToggle.textContent = hidden ? "Vis filtre" : "Skjul filtre";
-      els.filterToggle.setAttribute("aria-expanded", String(!hidden));
+      const label = hidden ? "Vis filtre" : "Skjul filtre";
+      if (els.filterToggle) {
+        els.filterToggle.textContent = label;
+        els.filterToggle.setAttribute("aria-expanded", String(!hidden));
+      }
+      if (els.filterToggleAside) {
+        els.filterToggleAside.textContent = label;
+        els.filterToggleAside.setAttribute("aria-expanded", String(!hidden));
+      }
     }
 
     function render() {
@@ -2600,11 +2622,16 @@
       });
 
       const filterLayout = document.querySelector(".footprint-layout");
+      const toggleFilter = () => {
+        if (!filterLayout) return;
+        filterLayout.classList.toggle("collapsed");
+        updateFilterToggle();
+      };
       if (els.filterToggle && filterLayout) {
-        els.filterToggle.addEventListener("click", () => {
-          filterLayout.classList.toggle("collapsed");
-          updateFilterToggle();
-        });
+        els.filterToggle.addEventListener("click", toggleFilter);
+      }
+      if (els.filterToggleAside && filterLayout) {
+        els.filterToggleAside.addEventListener("click", toggleFilter);
       }
 
       window.addEventListener("resize", () => {
