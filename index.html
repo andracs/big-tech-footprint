@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="da">
+<!-- Changelog: Rettet Anthropic-tilskrivning i "Løfter vs nyeste" til OLMo-modelserie (Ai2/CMU) samt korrigeret Googles 2024 total til 14,2968 Mt CO2e (market-based). Tilføjet fjerde faneblad "AI's ressourceforbrug" og opdateret grønt tema samt kilde-links. -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,15 +8,15 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f2;
+      --bg: #f0f5ee;
       --panel: #ffffff;
       --ink: #17201b;
-      --muted: #61706a;
-      --line: #d8ded6;
-      --strong-line: #aab6ad;
-      --accent: #146c63;
-      --accent-2: #234c9f;
-      --warn: #a75916;
+      --muted: #4f5e51;
+      --line: #d7e1d7;
+      --strong-line: #9fb29e;
+      --accent: #0f5f56;
+      --accent-2: #1d6b4f;
+      --warn: #b75616;
       --shadow: 0 18px 45px rgba(31, 45, 38, 0.11);
       --radius: 8px;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -28,7 +29,7 @@
     body {
       margin: 0;
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.1) 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.12) 42%),
         var(--bg);
       color: var(--ink);
     }
@@ -102,12 +103,29 @@
       display: block;
     }
 
+    .footprint-layout,
     .dashboard {
       display: grid;
-      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
       gap: 18px;
       margin-top: 18px;
       align-items: start;
+    }
+
+    .footprint-layout aside {
+      grid-column: 2;
+    }
+
+    .footprint-layout .content {
+      grid-column: 1;
+    }
+
+    .footprint-layout.collapsed {
+      grid-template-columns: 1fr;
+    }
+
+    .footprint-layout.collapsed aside {
+      display: none;
     }
 
     aside,
@@ -124,6 +142,24 @@
       padding: 14px;
       position: sticky;
       top: 14px;
+    }
+
+    .filter-toggle {
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      border-radius: 7px;
+      color: var(--ink);
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      min-height: 38px;
+      justify-self: end;
+      transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+
+    .filter-toggle:hover {
+      border-color: var(--strong-line);
+      transform: translateY(-1px);
     }
 
     .control-block + .control-block {
@@ -223,9 +259,9 @@
 
     button.active,
     .segmented button.active {
-      border-color: rgba(20, 108, 99, 0.38);
-      background: rgba(20, 108, 99, 0.11);
-      color: #0c4f48;
+      border-color: rgba(15, 95, 86, 0.38);
+      background: rgba(15, 95, 86, 0.14);
+      color: #0b513f;
     }
 
     select {
@@ -280,6 +316,13 @@
       gap: 16px;
       align-items: start;
       margin-bottom: 8px;
+    }
+
+    .chart-top-actions {
+      display: grid;
+      gap: 12px;
+      justify-items: end;
+      align-items: start;
     }
 
     .chart-top h2 {
@@ -796,6 +839,7 @@
     }
 
     @media (max-width: 1060px) {
+      .footprint-layout,
       .dashboard,
       .below-grid,
       .data-layout,
@@ -860,11 +904,10 @@
   <main>
     <header>
       <div>
-        <h1>Faktiske og forventede CO<sub>2</sub>e-udledninger</h1>
+        <h1>👉 Faktiske og forventede CO<sub>2</sub>e-udledninger</h1>
         <p class="subtitle">
-          Interaktiv visualisering af rapporterede drivhusgasudledninger fra Microsoft, Google, Apple, Amazon og Meta/Facebook
-          mellem 2020 og 2026. OpenAI og Anthropic er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige
-          &aring;rlige virksomhedstal for Scope 1, 2 og 3.
+          Her kan du sammenligne selskabernes egne klimatal med de seneste offentlige rapporter for Microsoft, Google, Apple, Amazon og Meta/Facebook.
+          OpenAI og Anthropic er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige &aring;rlige Scope 1, 2 og 3-tal.
         </p>
       </div>
       <div class="status-chip">Senest verificeret: 6. juni 2026</div>
@@ -874,10 +917,12 @@
       <button type="button" class="tab-button active" data-tab-target="footprint">Footprints</button>
       <button type="button" class="tab-button" data-tab-target="promises">L&oslash;fter vs nyeste</button>
       <button type="button" class="tab-button" data-tab-target="data-centres">Datacentre & brancher</button>
+      <button type="button" class="tab-button" data-tab-target="ai-resources">AI's ressourceforbrug</button>
     </nav>
 
-    <section class="dashboard view-panel active" id="panel-footprint" data-tab-panel="footprint">
-      <aside aria-label="Kontroller">
+    <section class="view-panel active" id="panel-footprint" data-tab-panel="footprint">
+      <div class="footprint-layout">
+      <aside class="filter-sidebar" aria-label="Kontroller">
         <div class="control-block">
           <div class="control-title">Virksomheder</div>
           <div class="button-row" aria-label="V&aelig;lg virksomheder">
@@ -944,7 +989,10 @@
                 &aring;rlige emissioner.
               </p>
             </div>
-            <div class="legend" id="legend"></div>
+            <div class="chart-top-actions">
+              <div class="legend" id="legend"></div>
+              <button id="filterToggle" type="button" class="filter-toggle" aria-expanded="true">Skjul filtre</button>
+            </div>
           </div>
           <div class="chart-wrap" id="chartWrap">
             <svg id="chart" role="img" aria-label="CO2e-graf"></svg>
@@ -990,6 +1038,7 @@
           </section>
         </section>
       </div>
+      </div>
     </section>
 
     <section class="wide-panel view-panel" id="panel-promises" data-tab-panel="promises">
@@ -998,8 +1047,8 @@
           <div>
             <h2>Hvad lovede de, og hvad viser de nyeste tal?</h2>
             <p class="chart-copy">
-              Korte, konkrete citater fra selskabernes egne klimal&oslash;fter holdes op mod de seneste offentlige rapporterede tal.
-              Statusfeltet er en analytisk vurdering af afstanden mellem l&oslash;ftet og den nyeste emissionsretning.
+              Vi tager selskabernes egne klimal&oslash;fter og holder dem op mod de nyeste offentlige tal.
+              Status er vores vurdering af, hvor langt de er fra at følge løftet.
             </p>
           </div>
         </div>
@@ -1026,9 +1075,8 @@
           </table>
         </div>
         <div class="method-box">
-          <strong>Fortolkning:</strong> "G&aring;r v&aelig;k fra det" betyder her enten, at emissionskurven bev&aelig;ger sig v&aelig;k fra en line&aelig;r
-          m&aring;lbane, eller at den offentlige kommunikation/rapportering ikke l&aelig;ngere underst&oslash;tter l&oslash;ftet med en klar, sammenlignelig
-          nedadg&aring;ende udvikling. Det er ikke en juridisk vurdering af, om et l&oslash;fte er opgivet.
+          <strong>Fortolkning:</strong> Status er vores vurdering af, om emissionerne bev&ae;ger sig væk fra målbane eller om kommunikationen ikke længere matcher løftet.
+          Det er ikke en juridisk dom over, om et løfte er opgivet.
         </div>
       </section>
     </section>
@@ -1037,11 +1085,10 @@
       <section class="chart-panel" aria-label="Datacenterudledning">
         <div class="chart-top">
           <div>
-            <h2>Datacentre: CO<sub>2</sub>-stigning og prognose</h2>
+            <h2>Datacentre: CO<sub>2</sub> i dag og fremskrivningen til 2030</h2>
             <p class="chart-copy">
-              Estimatet viser global elrelateret CO<sub>2</sub> fra datacentre. 2024 er forankret i IEA's seneste niveau,
-              2020-2023 er bagudregnet fra IEA's historiske v&aelig;kstrate, og 2025-2030 er fremskrevet mod IEA's base case
-              p&aring; ca. 320 Mt CO<sub>2</sub>. Grafen bruger log-skala, s&aring; datacentre kan sammenlignes med st&oslash;rre brancher.
+              Tallene viser, hvor meget CO<sub>2</sub> verdens datacentre udleder via deres elforbrug.
+              2024 er forankret i IEA's estimat, og 2025-2030 er trukket mod IEA's base case på ca. 320 Mt CO<sub>2</sub>.
             </p>
           </div>
           <div class="legend">
@@ -1102,11 +1149,40 @@
           </div>
           <ul class="source-list" id="dataSourceList"></ul>
           <div class="method-box">
-            <strong>Prognosemetode:</strong> 2024 = IEA's omtrentlige 180 Mt CO<sub>2</sub>. 2020-2023 er bagudregnet med
-            12% &aring;rlig v&aelig;kst. 2025-2030 interpolerer mod IEA's base case p&aring; ca. 320 Mt CO<sub>2</sub> i 2030. IPCC-scenarierne
-            anvender globale reduktionsprocenter p&aring; 2024-datacenterniveauet som en visuel klimamark&oslash;r.
+            <strong>Prognosemetode:</strong> 2024 tager IEA's niveau som udgangspunkt. 2020-2023 er bagudregnet med en historisk vækstrate, og 2025-2030 er trukket mod IEA's base case.
+            De IPCC-linjer viser en visuel retning for klimaet, ikke en endelig datacenterbudget.
           </div>
         </section>
+      </section>
+    </section>
+
+    <section class="wide-panel view-panel" id="panel-ai-resources" data-tab-panel="ai-resources">
+      <section class="chart-panel" aria-label="AI's ressourceforbrug">
+        <div class="chart-top">
+          <div>
+            <h2>AI's ressourceforbrug ifølge FN/UNU</h2>
+            <p class="chart-copy">
+              Tallene er fra FN/UNU-rapporten 2026 og handler om, hvor meget strøm, vand og plads AI kan komme til at bruge frem mod 2030.
+              Det er fremskrivninger, ikke et facit.
+            </p>
+          </div>
+        </div>
+        <div class="benchmark-list" id="aiPowerCards"></div>
+        <div class="kpi-row" id="aiKpiRow"></div>
+        <div class="method-box">
+          <strong>Bemærk:</strong> Dette er FN/UNU-rapportens fremskrivninger. De viser retningen og omfanget, men ikke et endeligt regnskab.
+        </div>
+      </section>
+
+      <section class="notes-panel" aria-label="AI-kilder">
+        <div class="panel-head">
+          <h2>Kilder</h2>
+          <span>UNU, Videnskab.dk, Statista, Cloudscene</span>
+        </div>
+        <ul class="source-list" id="aiSourceList"></ul>
+        <div class="method-box">
+          Danmark: 76 private datacentre ifølge Altinget. Energinet har sat store nettilslutninger i bero, og store datacenterprojekter kan møde en 5-10 års kø.
+        </div>
       </section>
     </section>
   </main>
@@ -1160,14 +1236,14 @@
           label: "Net-zero across operations and value chain by 2030."
         },
         actual: {
-          total: {2020: 8.7374, 2021: 10.5206, 2022: 11.9003, 2023: 14.2968, 2024: 15.1852},
+          total: {2020: 8.7374, 2021: 10.5206, 2022: 11.9003, 2023: 11.9003, 2024: 14.2968},
           scope1: {2020: 0.0558, 2021: 0.0641, 2022: 0.0912, 2023: 0.0794, 2024: 0.0731},
           scope2: {2020: 0.9116, 2021: 1.8235, 2022: 2.4921, 2023: 3.4234, 2024: 3.0591},
-          scope3: {2020: 7.77, 2021: 8.633, 2022: 9.317, 2023: 10.794, 2024: 12.053}
+          scope3: {2020: 7.77, 2021: 8.633, 2022: 9.317, 2023: 10.794, 2024: 11.1646}
         },
         source: {
           title: "Google Environmental Report 2025",
-          url: "https://www.sustainability.google/reports/google-2025-environmental-report/",
+          url: "https://sustainability.google/reports/google-2025-environmental-report/",
           note: "2024 fiscal-year inventory table, Scope 1, Scope 2 market-based and Scope 3."
         }
       },
@@ -1242,7 +1318,7 @@
         },
         source: {
           title: "Meta Environmental Data Index 2025",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Environmental-Data-Index.pdf",
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf",
           note: "Total GHG emissions with contractual instruments applied, 2020-2024."
         }
       },
@@ -1268,11 +1344,11 @@
         noCompanyData: true,
         target: null,
         actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
-        extraEvidence: "Model-level datapunkt: 493 tCO2e for en modelserie i en 2025 forskningsartikel, ikke en &aring;rlig virksomhedsfootprint.",
+        extraEvidence: "493 tCO2e er et modeludviklingsdataeksempel for OLMo-modelserie (Ai2/CMU), ikke en årlig virksomhedsinventory for Anthropic.",
         source: {
           title: "Holistically Evaluating the Environmental Impact of Creating Language Models",
           url: "https://arxiv.org/abs/2503.05804",
-          note: "Modeludviklingsdata fra Anthropic-forskere, ikke fuldt Scope 1+2+3 firmaregnskab."
+          note: "Modeldata for OLMo-modelserie (Ai2/CMU), ikke sammenlignelige Scope 1+2+3-firmatal."
         }
       }
     ];
@@ -1287,6 +1363,7 @@
           when: "2030",
           how: "Carbon negative: reducere mere end halvdelen af egne udledninger, fjerne resten og senere historiske udledninger.",
           quote: "carbon negative by 2030",
+          quoteLiteral: true,
           sourceTitle: "Microsoft announcement, 2020",
           url: "https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/"
         },
@@ -1294,6 +1371,7 @@
           when: "FY2024 / rapport 2025",
           summary: "Total Scope 1+2+3 ligger 23,4% over 2020-baseline; Scope 3 er fortsat den store udfordring ved cloud- og AI-udbygning.",
           quote: "overall emissions are 23.4% higher",
+          quoteLiteral: true,
           sourceTitle: "Microsoft Environmental Sustainability Report 2025",
           url: "https://www.microsoft.com/en-us/corporate-responsibility/sustainability/report"
         }
@@ -1307,15 +1385,17 @@
           when: "2030",
           how: "Net-zero for drift og v\u00e6rdik\u00e6de, 24/7 carbon-free energy og carbon removals frem for traditionelle offsets.",
           quote: "net-zero emissions across all of our operations and value chain by 2030",
+          quoteLiteral: true,
           sourceTitle: "Google Environmental Report 2025",
           url: "https://www.sustainability.google/reports/google-2025-environmental-report/"
         },
         latest: {
           when: "2024-tal / 2025-rapportering",
-          summary: "Udledningerne er 51% over 2019-baseline, og eksterne medier rapporterede i 2025, at net-zero-headlinen blev fjernet fra Googles sustainability-side.",
-          quote: "removed its first headline",
-          sourceTitle: "Tom's Hardware / National Observer, 2025",
-          url: "https://www.tomshardware.com/tech-industry/google-quietly-removes-net-zero-carbon-goal-from-website-amid-rapid-power-hungry-ai-data-center-buildout-industry-first-sustainability-pledge-moved-to-background-amidst-ai-energy-crisis"
+          summary: "Udledningerne er 51% over 2019-baseline, og eksterne medier rapporterede i 2025, at net-zero-headlinen blev fjernet fra Googles bæredygtighedsside.",
+          quote: "National Observer / Tom's Hardware: removed its first headline",
+          quoteLiteral: false,
+          sourceTitle: "National Observer / Tom's Hardware, 2025",
+          url: "https://www.nationalobserver.com/2025/09/04/investigations/google-net-zero-sustainability"
         }
       },
       {
@@ -1327,6 +1407,7 @@
           when: "2030",
           how: "75% gross reduction fra 2015-baseline og carbon removal for de resterende emissioner.",
           quote: "carbon neutral across our entire carbon footprint",
+          quoteLiteral: true,
           sourceTitle: "Apple Environment / Apple 2030",
           url: "https://www.apple.com/environment/"
         },
@@ -1334,6 +1415,7 @@
           when: "FY2024 / rapport 2025-2026",
           summary: "Apple rapporterer mere end 60% reduktion fra 2015 og et 2024-footprint p\u00e5 15,3 Mt CO2e, men m\u00e5let kr\u00e6ver yderligere reduktion til ca. 9,6 Mt plus removals.",
           quote: "reduced emissions by more than 60 percent",
+          quoteLiteral: true,
           sourceTitle: "Apple Environmental Progress Report / Environment",
           url: "https://www.apple.com/environment/"
         }
@@ -1347,6 +1429,7 @@
           when: "2040",
           how: "The Climate Pledge: net-zero carbon 10 \u00e5r f\u00f8r Paris-aftalens 2050-m\u00e5l.",
           quote: "net-zero carbon by 2040",
+          quoteLiteral: true,
           sourceTitle: "The Climate Pledge",
           url: "https://www.theclimatepledge.com/"
         },
@@ -1354,6 +1437,7 @@
           when: "2024",
           summary: "Amazon faldt i 2023, men steg igen til 68,25 Mt CO2e i 2024, ca. 12,6% over 2020-niveauet.",
           quote: "increased by 6%",
+          quoteLiteral: true,
           sourceTitle: "Amazon Sustainability Report 2024",
           url: "https://sustainability.aboutamazon.com/content/dam/sustainability-marketing-site/pdfs/reports-docs/2024-amazon-sustainability-report.pdf"
         }
@@ -1367,15 +1451,17 @@
           when: "2030",
           how: "Net-zero for hele v\u00e6rdik\u00e6den, med 100% vedvarende elmatch og leverand\u00f8rprogrammer som centrale redskaber.",
           quote: "net zero emissions across our value chain in 2030",
+          quoteLiteral: true,
           sourceTitle: "Meta Sustainability Report",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Sustainability-Report_.pdf"
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Sustainability-Report_.pdf"
         },
         latest: {
           when: "2024 / data index 2025",
-          summary: "Meta rapporterer 8,200595 Mt CO2e i 2024 med kontraktuelle instrumenter, markant over 2020 og domineret af Scope 3.",
+          summary: "Meta rapporterer 8,200595 Mt CO2e i 2024 med kontraktuelle instrumenter; tallene er signifikant over 2020 og domineret af Scope 3.",
           quote: "8,200,595 metric tons CO2e",
+          quoteLiteral: false,
           sourceTitle: "Meta Environmental Data Index 2025",
-          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/08/Meta_2025-Environmental-Data-Index.pdf"
+          url: "https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf"
         }
       },
       {
@@ -1406,15 +1492,17 @@
           who: "Anthropic",
           when: "Ingen offentlig 2020-2026 Scope 1+2+3-neutralitetsdeadline fundet",
           how: "Der findes model-/forskningsdata for AI-udvikling, men ikke en fuld \u00e5rlig virksomhedsinventory p\u00e5 linje med de store b\u00f8rsnoterede selskaber.",
-          quote: "493 metric tons CO2e",
-          sourceTitle: "Holistically Evaluating the Environmental Impact of Creating Language Models",
+          quote: "Ingen offentlig firmadata; 493 tCO2e er fra OLMo-modelserie (Ai2/CMU), ikke fra Anthropic's samlede drift.",
+          quoteLiteral: false,
+          sourceTitle: "arXiv 2503.05804",
           url: "https://arxiv.org/abs/2503.05804"
         },
         latest: {
           when: "2025",
           summary: "Det konkrete datapunkt d\u00e6kker modelskabelse og -udvikling, ikke Anthropic's samlede drift, leverand\u00f8rk\u00e6de og datacenterforbrug.",
-          quote: "model creation and development",
-          sourceTitle: "arXiv, 2025",
+          quote: "Ai2/CMU OLMo-modelserie: 493 tCO2e",
+          quoteLiteral: false,
+          sourceTitle: "arXiv 2503.05804",
           url: "https://arxiv.org/abs/2503.05804"
         }
       }
@@ -1520,6 +1608,83 @@
       }
     ];
 
+    const aiResourceFacts = [
+      {
+        label: "Alle datacentre (2025)",
+        value: "På niveau med Frankrig",
+        note: "Datacentre var verdens 11. største strømforbruger i 2025.",
+        color: "#146c63"
+      },
+      {
+        label: "AI alene (2025)",
+        value: "Mere end Belgien + Finland",
+        note: "Kun AI-arbejdsbyrder, ikke hele datacentre.",
+        color: "#1d6b4f"
+      },
+      {
+        label: "Datacentre 2030",
+        value: "≈ 945 TWh",
+        note: "Ca. 3x Pakistan+Bangladesh+Nigeria.",
+        color: "#5b6470"
+      }
+    ];
+
+    const aiKpiFacts = [
+      {
+        value: "2,6 år",
+        label: "Datacentres 2025-strøm svarer til Afrika syd for Sahara i 2,6 år",
+        source: "FN/UNU 2026"
+      },
+      {
+        value: "3%",
+        label: "AI ventes at stå for ca. 3% af verdens el i 2030",
+        source: "FN/UNU 2026"
+      },
+      {
+        value: "9,3 billioner l",
+        label: "Datacentrenes vandforbrug i 2030 svarer til Afrika syd for Sahara i et år",
+        source: "FN/UNU 2026"
+      },
+      {
+        value: "2,5 mio. t",
+        label: "E-affald i 2030 svarer til ca. 250 Eiffeltårne",
+        source: "FN/UNU 2026"
+      },
+      {
+        value: "14.500 km²",
+        label: "Arealaftryk i 2030 er ca. 2x Jakarta",
+        source: "FN/UNU 2026"
+      },
+      {
+        value: "11.700+",
+        label: "Datacentre i verden i april 2026",
+        source: "Statista / Cloudscene"
+      },
+      {
+        value: "5.000+",
+        label: "Datacentre i USA",
+        source: "Statista / Cloudscene"
+      }
+    ];
+
+    const aiSources = [
+      {
+        title: "Videnskab.dk: Datacentre bruger lige så meget strøm som Frankrig",
+        url: "https://videnskab.dk/teknologi/datacentre-bruger-lige-saa-meget-stroem-som-frankrig-og-snart-mere-vand-end-hele-afrika/",
+        note: "Artikel om FN/UNU-rapportens strøm-, vand- og arealdata for datacentre."
+      },
+      {
+        title: "UNU 2026: Environmental Cost of AI's Energy Use",
+        url: "https://unu.edu/inweh/collection/environmental-cost-of-AIs-Enrgy-Use-Carbon-water-and-land-footprints",
+        note: "FN/UNU-rapport om CO2, vand og areal for AI og datacentre frem mod 2030."
+      },
+      {
+        title: "Statista / Cloudscene: Globale datacentre i april 2026",
+        url: "https://cloudscene.com/",
+        note: "Oversigt over antal datacentre globalt og i USA."
+      }
+    ];
+
     const state = {
       selectedIds: new Set(companies.filter((company) => company.selected).map((company) => company.id)),
       metric: "total",
@@ -1550,6 +1715,7 @@
       startYearLabel: document.getElementById("startYearLabel"),
       endYearLabel: document.getElementById("endYearLabel"),
       expectationHelp: document.getElementById("expectationHelp"),
+      filterToggle: document.getElementById("filterToggle"),
       tabButtons: document.querySelectorAll("[data-tab-target]"),
       tabPanels: document.querySelectorAll("[data-tab-panel]"),
       promiseCards: document.getElementById("promiseCards"),
@@ -1952,13 +2118,21 @@
       els.promiseCards.innerHTML = promiseData.map((item) => {
         const company = companyById(item.companyId);
         const promiseLabel = item.statusClass === "missing" ? "Datastatus" : "L&oslash;fte";
-        const promiseQuote = item.statusClass === "missing" ? item.promise.quote : `&quot;${item.promise.quote}&quot;`;
-        const latestQuote = item.statusClass === "missing" ? item.latest.quote : `&quot;${item.latest.quote}&quot;`;
+        const promiseQuote = item.statusClass === "missing"
+          ? item.promise.quote
+          : item.promise.quoteLiteral
+            ? `&quot;${item.promise.quote}&quot;`
+            : item.promise.quote;
+        const latestQuote = item.statusClass === "missing"
+          ? item.latest.quote
+          : item.latest.quoteLiteral
+            ? `&quot;${item.latest.quote}&quot;`
+            : item.latest.quote;
         return `
           <article class="promise-card">
             <div class="promise-top">
               <h2><span class="color-dot" style="background:${company.color}"></span>${company.name}</h2>
-              <span class="risk-pill ${item.statusClass}">${item.status}</span>
+              <span class="risk-pill ${item.statusClass}" title="Status er vores vurdering af, hvor langt de er fra at holde løftet.">${item.status}</span>
             </div>
             <dl class="promise-detail">
               <dt>Hvem</dt><dd>${item.promise.who}</dd>
@@ -2248,7 +2422,7 @@
       const sources = [
         {
           title: "IEA Energy and AI, executive summary",
-          url: "https://www.iea.org/reports/energy-and-ai/executive-summary%C2%A0",
+          url: "https://www.iea.org/reports/energy-and-ai/executive-summary",
           note: "415 TWh i 2024, ca. 945 TWh i 2030 og ca. 180 Mt CO2 fra datacentres elforbrug i dag."
         },
         {
@@ -2268,7 +2442,7 @@
         },
         {
           title: "IATA 2024 Aviation Emissions",
-          url: "https://www.iata.org/en/publications/economics/chart-week/chart-of-the-week-28-november-2025/",
+          url: "https://www.iata.org/en/iata-repository/publications/economic-reports/2024-aviation-emissions-efficiency-gains-vs.-rising-totals",
           note: "Global airline-sector gross CO2 i 2024: 942 Mt."
         },
         {
@@ -2279,10 +2453,40 @@
         {
           title: "Global Carbon Project / CICERO cement dataset",
           url: "https://zenodo.org/records/10707604",
-          note: "Cement 2022: ca. 1,6 Gt CO2 procesemissioner plus ca. 1,0 Gt CO2 fra fossil varme."
+          note: "Cement 2022: proces- og energiudledninger i global produktion."
         }
       ];
       els.dataSourceList.innerHTML = sources.map((source) => `
+        <li>
+          <a href="${source.url}" target="_blank" rel="noreferrer">${source.title}</a>
+          <p>${source.note}</p>
+        </li>
+      `).join("");
+    }
+
+    function renderAiResources() {
+      els.aiPowerCards.innerHTML = aiResourceFacts.map((item) => `
+        <article class="benchmark-card">
+          <h3>${item.label}</h3>
+          <div class="benchmark-meta">
+            <strong>${item.value}</strong>
+          </div>
+          <div class="bar-track" aria-hidden="true">
+            <div class="bar-fill" style="background:${item.color}; width:75%"></div>
+          </div>
+          <p class="data-note">${item.note}</p>
+        </article>
+      `).join("");
+
+      els.aiKpiRow.innerHTML = aiKpiFacts.map((item) => `
+        <div class="kpi">
+          <div class="kpi-value">${item.value}</div>
+          <div class="kpi-label">${item.label}</div>
+          <div class="kpi-extra">${item.source}</div>
+        </div>
+      `).join("");
+
+      els.aiSourceList.innerHTML = aiSources.map((source) => `
         <li>
           <a href="${source.url}" target="_blank" rel="noreferrer">${source.title}</a>
           <p>${source.note}</p>
@@ -2295,11 +2499,19 @@
       els.chartTitle.textContent = `${metricName}, faktisk vs forventet`;
       els.tableMeta.innerHTML = state.view === "index" ? "Indeks, 2020 = 100" : "Mt CO<sub>2</sub>e";
       els.expectationHelp.innerHTML = state.expectation === "target"
-        ? "M&aring;lbanen er line&aelig;r og bygger p&aring; offentlige klimam&aring;l. Den vises kun for totaludledninger, fordi scope-specifikke m&aring;l ikke er ensartede."
-        : "Datatrenden er en simpel line&aelig;r regression p&aring; rapporterede datapunkter og forl&aelig;nges til 2026. Den er en model, ikke et selskabsforecast.";
+        ? "Målbanen er den lige linje, de skulle følge for at nå deres klimamål til tiden. Den vises kun for totaludledninger, fordi scope-specifikke mål ikke kan sammenlignes direkte."
+        : "Datatrenden er en simpel lineær regression på rapporterede datapunkter, forlænget til 2026. Den er en model, ikke et selskabsforecast.";
       els.chartCopy.innerHTML = state.expectation === "target"
-        ? "Fuld streg er rapporterede faktiske tal. Stiplet streg er en line&aelig;r m&aring;lbane mod virksomhedernes offentlige klimam&aring;l. For Scope 1, 2 og 3 vises m&aring;lbanen kun, hvis den kan udledes forsvarligt."
-        : "Fuld streg er rapporterede faktiske tal. Stiplet streg er en datadrevet line&aelig;r trend baseret p&aring; de tilg&aelig;ngelige rapporterede &aring;r, forl&aelig;nget til 2026.";
+        ? "Fuld streg er rapporterede tal. Stiplet streg er den lige målbane mod offentlige klimamål."
+        : "Fuld streg er rapporterede tal. Stiplet streg er en datadrevet lineær trend baseret på de tilgængelige år, forlænget til 2026.";
+    }
+
+    function updateFilterToggle() {
+      const layout = document.querySelector(".footprint-layout");
+      const hidden = layout?.classList.contains("collapsed");
+      if (!els.filterToggle) return;
+      els.filterToggle.textContent = hidden ? "Vis filtre" : "Skjul filtre";
+      els.filterToggle.setAttribute("aria-expanded", String(!hidden));
     }
 
     function render() {
@@ -2316,8 +2528,10 @@
       renderDataBenchmarks();
       renderDataTable();
       renderDataSources();
+      renderAiResources();
       els.startYearLabel.textContent = state.startYear;
       els.endYearLabel.textContent = state.endYear;
+      updateFilterToggle();
     }
 
     function bindEvents() {
@@ -2384,6 +2598,14 @@
         }
         render();
       });
+
+      const filterLayout = document.querySelector(".footprint-layout");
+      if (els.filterToggle && filterLayout) {
+        els.filterToggle.addEventListener("click", () => {
+          filterLayout.classList.toggle("collapsed");
+          updateFilterToggle();
+        });
+      }
 
       window.addEventListener("resize", () => {
         window.requestAnimationFrame(() => {
