@@ -791,9 +791,10 @@
       margin-top: 12px;
     }
 
+    .ai-visual-grid,
     .ai-dashboard {
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+      grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
       gap: 14px;
       align-items: start;
       margin-top: 14px;
@@ -854,6 +855,94 @@
       color: var(--muted);
       line-height: 1.5;
       font-size: 0.9rem;
+    }
+
+    .ai-scenario-wrap,
+    .ai-sankey-wrap {
+      position: relative;
+      width: 100%;
+      height: 410px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 247, 242, 0.84));
+      overflow: hidden;
+    }
+
+    .ai-sankey-wrap {
+      height: 360px;
+      margin: 10px 0 12px;
+    }
+
+    .scenario-band {
+      fill: rgba(20, 108, 99, 0.12);
+    }
+
+    .scenario-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .scenario-line.secondary {
+      stroke-width: 2.4;
+      stroke-dasharray: 7 7;
+    }
+
+    .scenario-point {
+      stroke: #fff;
+      stroke-width: 2;
+      cursor: crosshair;
+    }
+
+    .scenario-label {
+      fill: #20372e;
+      font-size: 11px;
+      font-weight: 800;
+      paint-order: stroke;
+      stroke: rgba(251, 252, 250, 0.95);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .sankey-link {
+      fill: none;
+      stroke-linecap: round;
+      mix-blend-mode: multiply;
+      cursor: crosshair;
+      transition: opacity 160ms ease, stroke-width 160ms ease;
+    }
+
+    .sankey-node rect {
+      fill: rgba(255, 255, 255, 0.94);
+      stroke: var(--line);
+      stroke-width: 1;
+      rx: 7;
+    }
+
+    .sankey-node.active rect {
+      stroke: rgba(20, 108, 99, 0.55);
+      fill: rgba(236, 246, 241, 0.98);
+    }
+
+    .sankey-node text {
+      fill: #17201b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .sankey-node tspan {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 650;
+    }
+
+    .ai-panel-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
     }
 
     .ai-scale-list {
@@ -1102,6 +1191,7 @@
     @media (max-width: 1060px) {
       .below-grid,
       .data-layout,
+      .ai-visual-grid,
       .ai-dashboard,
       .promise-grid {
         grid-template-columns: 1fr;
@@ -1182,6 +1272,11 @@
 
       .chart-wrap {
         height: 430px;
+      }
+
+      .ai-scenario-wrap,
+      .ai-sankey-wrap {
+        height: 360px;
       }
 
       th,
@@ -1458,7 +1553,7 @@
             </p>
           </div>
         </div>
-        <div class="ai-dashboard">
+        <div class="ai-visual-grid">
           <div class="ai-stage">
             <div class="ai-lens-controls" id="aiLensControls" aria-label="Vælg AI-ressourcevisning"></div>
             <div class="ai-lens-head">
@@ -1466,11 +1561,18 @@
               <span id="aiLensUnit"></span>
             </div>
             <p class="ai-lens-copy" id="aiLensCopy"></p>
-            <div class="ai-scale-list" id="aiScaleList"></div>
+            <div class="ai-scenario-wrap" id="aiScenarioWrap">
+              <svg id="aiScenarioChart" role="img" aria-label="AI-scenarie-vifte"></svg>
+              <div class="tooltip" id="aiScenarioTooltip" aria-hidden="true"></div>
+            </div>
             <div class="ai-callout-grid" id="aiCalloutGrid"></div>
           </div>
           <aside class="ai-side-panel" aria-label="AI-ressourceindsigter">
-            <h3>Hvad sammenlignes?</h3>
+            <h3>Ressource-flow</h3>
+            <p class="ai-panel-note">Sankey-flowet viser mekanismer og prespunkter. Bredden er relativ styrke/usikkerhed, ikke samme enhed.</p>
+            <div class="ai-sankey-wrap" id="aiSankeyWrap">
+              <svg id="aiSankey" role="img" aria-label="Sankey over AI-ressourceforbrug"></svg>
+            </div>
             <div class="ai-spark" id="aiPowerCards"></div>
           </aside>
         </div>
@@ -2269,6 +2371,132 @@
       }
     };
 
+    const aiScenarioData = {
+      power: {
+        title: "Scenario-vifte: datacentres elbehov",
+        unit: "TWh/år",
+        copy: "Viften starter ved IEA's 2024-anker og viser tre mulige forløb. 2030-basecasen er konkret IEA-data; de øvrige forløb visualiserer IEA's usikkerhedsspænd mod 2035.",
+        years: [2024, 2030, 2035],
+        yMax: 1800,
+        note: "Ankre: 415 TWh i 2024, 945 TWh i 2030 base case, 700-1.700 TWh på tværs af IEA-cases i 2035.",
+        scenarios: [
+          {
+            key: "low",
+            label: "Headwinds / høj effektivitet",
+            color: "#5b6470",
+            values: {2024: 415, 2030: 700, 2035: 700},
+            note: "Lavere AI-uptake, flaskehalse og stærkere hardware-/model-effektivitet."
+          },
+          {
+            key: "base",
+            label: "IEA base case",
+            color: "#146c63",
+            values: {2024: 415, 2030: 945, 2035: 1300},
+            note: "IEA's centrale forløb: over fordobling i 2030 og ca. 1.300 TWh elproduktion til datacentre i 2035."
+          },
+          {
+            key: "high",
+            label: "Lift-off / hurtig AI-udbygning",
+            color: "#a75916",
+            values: {2024: 415, 2030: 1180, 2035: 1700},
+            note: "Hurtigere AI-adoption og mindre aflastning fra effektivitet og energiinfrastruktur."
+          }
+        ]
+      },
+      impact: {
+        title: "Scenario-vifte: CO2 fra datacenter-el",
+        unit: "Mt CO2/år",
+        copy: "Her er scenarierne drevet af samme efterspørgsel, men CO2-udfaldet afhænger af elmix, lokation og hvor hurtigt nye lavemissionskilder bygges.",
+        years: [2024, 2030, 2035],
+        yMax: 520,
+        note: "Ankre: ca. 180 Mt CO2 i dag, IEA base case topper omkring 320 Mt i 2030; Lift-Off kan nærme sig 1,5x base-case-toppen.",
+        scenarios: [
+          {
+            key: "low",
+            label: "Effektivitet + renere net",
+            color: "#5b6470",
+            values: {2024: 180, 2030: 240, 2035: 220},
+            note: "Skematisk lavt forløb med lavere demand og hurtigere net-dekarbonisering."
+          },
+          {
+            key: "base",
+            label: "IEA base case",
+            color: "#146c63",
+            values: {2024: 180, 2030: 320, 2035: 300},
+            note: "IEA: CO2 fra elproduktion til datacentre topper omkring 320 Mt CO2 i 2030."
+          },
+          {
+            key: "high",
+            label: "Lift-off / fossil spids",
+            color: "#a75916",
+            values: {2024: 180, 2030: 480, 2035: 450},
+            note: "IEA beskriver, at Lift-Off kan nå næsten 1,5 gange base-case maksimum."
+          }
+        ]
+      },
+      hardware: {
+        title: "Scenario-vifte: akkumuleret e-waste",
+        unit: "Mt, 2020-2030",
+        copy: "Hardware-viften viser akkumulering, ikke årligt flow. 2030-intervallet er det konkrete anker; mellemår er visualiseret som en mulig opbygning.",
+        years: [2020, 2026, 2030],
+        yMax: 5.4,
+        note: "Anker: Nature Computational Science estimerer 1,2-5,0 Mt generativ AI e-waste i 2020-2030 uden stærke cirkulære tiltag.",
+        scenarios: [
+          {
+            key: "low",
+            label: "Cirkulær hardware",
+            color: "#5b6470",
+            values: {2020: 0, 2026: 0.45, 2030: 1.2},
+            note: "Lavere udskiftningstempo, længere levetid og genbrug."
+          },
+          {
+            key: "base",
+            label: "Mellemforløb",
+            color: "#146c63",
+            values: {2020: 0, 2026: 1.5, 2030: 3.0},
+            note: "Midtpunkt mellem det publicerede lave og høje 2030-estimat."
+          },
+          {
+            key: "high",
+            label: "Hurtig udskiftning",
+            color: "#a75916",
+            values: {2020: 0, 2026: 2.7, 2030: 5.0},
+            note: "Høj udbygning og kortere levetid for accelerators/servere."
+          }
+        ]
+      }
+    };
+
+    const aiSankeyNodes = [
+      {id: "demand", label: "Brug & adoption", detail: "volumen, agents, video", x: 18, y: 36, w: 128, h: 50, focus: ["power", "impact"]},
+      {id: "models", label: "Modeldesign", detail: "størrelse + effektivitet", x: 18, y: 135, w: 128, h: 50, focus: ["power", "impact"]},
+      {id: "chips", label: "GPU-flåde", detail: "chips, servere, levetid", x: 18, y: 238, w: 128, h: 50, focus: ["hardware", "power"]},
+      {id: "location", label: "Placering", detail: "net, klima, vandstress", x: 18, y: 335, w: 128, h: 50, focus: ["impact"]},
+      {id: "compute", label: "Compute-load", detail: "træning + inferens", x: 245, y: 78, w: 132, h: 52, focus: ["power"]},
+      {id: "datacentre", label: "Datacenterdrift", detail: "PUE, idle, køling", x: 245, y: 190, w: 132, h: 52, focus: ["power", "impact"]},
+      {id: "grid", label: "Elnet", detail: "fossil, VE, flaskehalse", x: 245, y: 302, w: 132, h: 52, focus: ["impact", "power"]},
+      {id: "electricity", label: "Strøm", detail: "415 → 945 TWh", x: 474, y: 34, w: 130, h: 50, focus: ["power"]},
+      {id: "co2", label: "CO2", detail: "180 → 320 Mt", x: 474, y: 122, w: 130, h: 50, focus: ["impact"]},
+      {id: "water", label: "Vand", detail: "731-1.125 mio. m3", x: 474, y: 214, w: 130, h: 50, focus: ["impact"]},
+      {id: "ewaste", label: "Hardware", detail: "1,2-5,0 Mt e-waste", x: 474, y: 306, w: 130, h: 50, focus: ["hardware"]},
+      {id: "bottleneck", label: "Lokale flaskehalse", detail: "net + kapacitet", x: 474, y: 380, w: 130, h: 50, focus: ["power"]}
+    ];
+
+    const aiSankeyLinks = [
+      {from: "demand", to: "compute", value: 5.0, color: "#146c63", focus: ["power"], label: "Mere brug og flere agentiske workflows øger inferens-load."},
+      {from: "models", to: "compute", value: 3.7, color: "#5b6470", focus: ["power"], label: "Modelarkitektur kan både øge og reducere compute pr. opgave."},
+      {from: "chips", to: "compute", value: 3.9, color: "#8b5b2f", focus: ["hardware", "power"], label: "GPU-udbygning omsætter chipkapacitet til mere compute."},
+      {from: "compute", to: "datacentre", value: 5.0, color: "#146c63", focus: ["power"], label: "Compute bliver til serverbelastning, kølebehov og reservekapacitet."},
+      {from: "datacentre", to: "electricity", value: 5.2, color: "#146c63", focus: ["power"], label: "Datacentre trækker strøm: 415 TWh i 2024 og 945 TWh i IEA's 2030-basecase."},
+      {from: "datacentre", to: "grid", value: 3.4, color: "#a75916", focus: ["power"], label: "Nye datacentre kan skabe lokale net- og tilslutningsflaskehalse."},
+      {from: "grid", to: "co2", value: 4.0, color: "#7a3f98", focus: ["impact"], label: "Elmix og fossil spidsproduktion afgør CO2-effekten."},
+      {from: "grid", to: "water", value: 3.2, color: "#0b7f83", focus: ["impact"], label: "Nature-studiet finder, at indirekte vand fra elproduktion er en stor del af aftrykket."},
+      {from: "datacentre", to: "water", value: 2.8, color: "#0b7f83", focus: ["impact"], label: "Køleteknologi og klima påvirker direkte vandforbrug."},
+      {from: "location", to: "grid", value: 2.9, color: "#234c9f", focus: ["impact"], label: "Placering bestemmer netmix, vandstress og varmebelastning."},
+      {from: "chips", to: "ewaste", value: 3.1, color: "#8b5b2f", focus: ["hardware"], label: "Kort hardwarelevetid og hurtig chipudskiftning øger e-waste-risiko."},
+      {from: "models", to: "ewaste", value: 1.7, color: "#8b5b2f", focus: ["hardware"], label: "Modelkapløb kan forkorte den praktiske levetid for servergenerationer."}
+    ];
+
     const aiExplainCards = [
       {
         title: "Systemgrænsen afgør tallet",
@@ -2349,7 +2577,7 @@
       {
         title: "IEA: Energy and AI",
         url: "https://www.iea.org/reports/energy-and-ai/executive-summary",
-        note: "Globalt overblik: datacentre brugte ca. 415 TWh i 2024 og kan nå ca. 945 TWh i 2030; AI er den vigtigste vækstdriver."
+        note: "Globalt overblik: datacentre brugte ca. 415 TWh i 2024, IEA's base case når ca. 945 TWh i 2030, og 2035-cases spænder fra ca. 700 til 1.700 TWh."
       },
       {
         title: "DOE/LBNL: 2024 United States Data Center Energy Usage Report",
@@ -2439,7 +2667,11 @@
       aiLensTitle: document.getElementById("aiLensTitle"),
       aiLensUnit: document.getElementById("aiLensUnit"),
       aiLensCopy: document.getElementById("aiLensCopy"),
-      aiScaleList: document.getElementById("aiScaleList"),
+      aiScenarioWrap: document.getElementById("aiScenarioWrap"),
+      aiScenarioChart: document.getElementById("aiScenarioChart"),
+      aiScenarioTooltip: document.getElementById("aiScenarioTooltip"),
+      aiSankeyWrap: document.getElementById("aiSankeyWrap"),
+      aiSankey: document.getElementById("aiSankey"),
       aiCalloutGrid: document.getElementById("aiCalloutGrid"),
       aiPowerCards: document.getElementById("aiPowerCards"),
       aiKpiRow: document.getElementById("aiKpiRow"),
@@ -2714,10 +2946,11 @@
 
     function positionTooltip(tooltip, chartWrap, cx, cy) {
       const chartBox = chartWrap.getBoundingClientRect();
-      const viewportPadding = 12;
-      const rawLeft = chartBox.left + cx;
-      const rawTop = chartBox.top + cy;
+      positionFloatingTooltip(tooltip, chartBox.left + cx, chartBox.top + cy);
+    }
 
+    function positionFloatingTooltip(tooltip, rawLeft, rawTop) {
+      const viewportPadding = 12;
       tooltip.classList.remove("below");
       tooltip.style.left = `${rawLeft}px`;
       tooltip.style.top = `${rawTop}px`;
@@ -3176,8 +3409,217 @@
       `).join("");
     }
 
+    function showAiTooltip(html, event) {
+      els.aiScenarioTooltip.innerHTML = html;
+      positionFloatingTooltip(els.aiScenarioTooltip, event.clientX, event.clientY);
+    }
+
+    function hideAiTooltip() {
+      els.aiScenarioTooltip.classList.remove("below");
+      els.aiScenarioTooltip.classList.remove("visible");
+    }
+
+    function renderAiScenarioChart(scenario) {
+      const svg = els.aiScenarioChart;
+      clearSvg(svg);
+      const rect = els.aiScenarioWrap.getBoundingClientRect();
+      const width = Math.max(320, rect.width);
+      const height = Math.max(320, rect.height);
+      const margin = {
+        top: 26,
+        right: width < 560 ? 26 : 132,
+        bottom: 48,
+        left: scenario.yMax > 100 ? 62 : 52
+      };
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+      const xMin = Math.min(...scenario.years);
+      const xMax = Math.max(...scenario.years);
+      const yMin = 0;
+      const yMax = scenario.yMax;
+      const xScale = (year) => margin.left + ((year - xMin) / Math.max(1, xMax - xMin)) * innerW;
+      const yScale = (value) => margin.top + innerH - ((value - yMin) / (yMax - yMin)) * innerH;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      const grid = makeSvg("g", {class: "grid"});
+      const yTicks = 4;
+      for (let index = 0; index <= yTicks; index += 1) {
+        const value = yMin + (index / yTicks) * (yMax - yMin);
+        const y = yScale(value);
+        grid.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: y, y2: y}));
+        const label = makeSvg("text", {x: margin.left - 10, y: y + 4, class: "grid-label", "text-anchor": "end"});
+        label.textContent = formatNumber(value, {maximumFractionDigits: yMax > 20 ? 0 : 1});
+        grid.appendChild(label);
+      }
+      svg.appendChild(grid);
+
+      const xAxis = makeSvg("g", {class: "axis"});
+      xAxis.appendChild(makeSvg("line", {x1: margin.left, x2: width - margin.right, y1: height - margin.bottom, y2: height - margin.bottom}));
+      scenario.years.forEach((year) => {
+        const x = xScale(year);
+        xAxis.appendChild(makeSvg("line", {x1: x, x2: x, y1: height - margin.bottom, y2: height - margin.bottom + 6}));
+        const label = makeSvg("text", {x, y: height - margin.bottom + 24, "text-anchor": "middle"});
+        label.textContent = year;
+        xAxis.appendChild(label);
+      });
+      svg.appendChild(xAxis);
+
+      const yAxis = makeSvg("g", {class: "axis"});
+      yAxis.appendChild(makeSvg("line", {x1: margin.left, x2: margin.left, y1: margin.top, y2: height - margin.bottom}));
+      svg.appendChild(yAxis);
+
+      const yLabel = makeSvg("text", {x: margin.left, y: 15, class: "grid-label", "text-anchor": "start"});
+      yLabel.textContent = scenario.unit;
+      svg.appendChild(yLabel);
+
+      const low = scenario.scenarios.find((item) => item.key === "low");
+      const high = scenario.scenarios.find((item) => item.key === "high");
+      if (low && high) {
+        const highPoints = scenario.years.map((year) => ({x: xScale(year), y: yScale(high.values[year])}));
+        const lowPoints = scenario.years.map((year) => ({x: xScale(year), y: yScale(low.values[year])})).reverse();
+        svg.appendChild(makeSvg("path", {
+          class: "scenario-band",
+          d: `${pathFromPoints(highPoints)} L ${lowPoints.map((point) => `${point.x} ${point.y}`).join(" L ")} Z`
+        }));
+      }
+
+      scenario.scenarios.forEach((item) => {
+        const points = scenario.years.map((year) => ({
+          year,
+          value: item.values[year],
+          x: xScale(year),
+          y: yScale(item.values[year])
+        }));
+        const path = makeSvg("path", {
+          d: pathFromPoints(points),
+          class: `scenario-line ${item.key === "base" ? "" : "secondary"}`,
+          stroke: item.color
+        });
+        path.addEventListener("mouseenter", (event) => showAiTooltip(`
+          <strong>${item.label}</strong>
+          <span>${scenario.unit}</span>
+          <span>${item.note}</span>
+          <span>${scenario.note}</span>
+        `, event));
+        path.addEventListener("mousemove", (event) => showAiTooltip(`
+          <strong>${item.label}</strong>
+          <span>${scenario.unit}</span>
+          <span>${item.note}</span>
+          <span>${scenario.note}</span>
+        `, event));
+        path.addEventListener("mouseleave", hideAiTooltip);
+        svg.appendChild(path);
+
+        points.forEach((point) => {
+          const circle = makeSvg("circle", {
+            cx: point.x,
+            cy: point.y,
+            r: item.key === "base" ? 5 : 4,
+            fill: item.key === "base" ? item.color : "#fff",
+            stroke: item.color,
+            class: "scenario-point"
+          });
+          circle.addEventListener("mouseenter", (event) => showAiTooltip(`
+            <strong>${item.label} · ${point.year}</strong>
+            <span>${formatNumber(point.value, {maximumFractionDigits: scenario.yMax > 20 ? 0 : 1})} ${scenario.unit}</span>
+            <span>${item.note}</span>
+          `, event));
+          circle.addEventListener("mousemove", (event) => showAiTooltip(`
+            <strong>${item.label} · ${point.year}</strong>
+            <span>${formatNumber(point.value, {maximumFractionDigits: scenario.yMax > 20 ? 0 : 1})} ${scenario.unit}</span>
+            <span>${item.note}</span>
+          `, event));
+          circle.addEventListener("mouseleave", hideAiTooltip);
+          svg.appendChild(circle);
+        });
+
+        const endPoint = points[points.length - 1];
+        if (width >= 560) {
+          const label = makeSvg("text", {
+            x: endPoint.x + 9,
+            y: endPoint.y + 4,
+            class: "scenario-label"
+          });
+          label.textContent = item.label;
+          svg.appendChild(label);
+        }
+      });
+
+      const note = makeSvg("text", {
+        x: margin.left,
+        y: height - 12,
+        class: "grid-label"
+      });
+      note.textContent = "Konkrete ankre er fra kilderne; mellemår er visualiserede scenarieforløb.";
+      svg.appendChild(note);
+    }
+
+    function renderAiSankey() {
+      const svg = els.aiSankey;
+      clearSvg(svg);
+      const width = 622;
+      const height = 446;
+      const nodesById = Object.fromEntries(aiSankeyNodes.map((node) => [node.id, node]));
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      aiSankeyLinks.forEach((link) => {
+        const from = nodesById[link.from];
+        const to = nodesById[link.to];
+        const x1 = from.x + from.w;
+        const y1 = from.y + from.h / 2;
+        const x2 = to.x;
+        const y2 = to.y + to.h / 2;
+        const bend = Math.max(70, (x2 - x1) * 0.55);
+        const active = link.focus.includes(state.aiLens);
+        const path = makeSvg("path", {
+          d: `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`,
+          class: "sankey-link",
+          stroke: link.color,
+          "stroke-width": active ? 5 + link.value * 4 : 3 + link.value * 2.2,
+          opacity: active ? 0.82 : 0.18
+        });
+        path.addEventListener("mouseenter", (event) => showAiTooltip(`
+          <strong>${from.label} → ${to.label}</strong>
+          <span>${link.label}</span>
+          <span>Tykkelse = relativ styrke/usikkerhed, ikke en fælles enhed.</span>
+        `, event));
+        path.addEventListener("mousemove", (event) => showAiTooltip(`
+          <strong>${from.label} → ${to.label}</strong>
+          <span>${link.label}</span>
+          <span>Tykkelse = relativ styrke/usikkerhed, ikke en fælles enhed.</span>
+        `, event));
+        path.addEventListener("mouseleave", hideAiTooltip);
+        svg.appendChild(path);
+      });
+
+      aiSankeyNodes.forEach((node) => {
+        const active = node.focus.includes(state.aiLens);
+        const group = makeSvg("g", {class: `sankey-node ${active ? "active" : ""}`, opacity: active ? 1 : 0.72});
+        group.appendChild(makeSvg("rect", {x: node.x, y: node.y, width: node.w, height: node.h}));
+        const text = makeSvg("text", {x: node.x + 10, y: node.y + 20});
+        text.textContent = node.label;
+        const detail = makeSvg("tspan", {x: node.x + 10, y: node.y + 37});
+        detail.textContent = node.detail;
+        text.appendChild(detail);
+        group.appendChild(text);
+        group.addEventListener("mouseenter", (event) => showAiTooltip(`
+          <strong>${node.label}</strong>
+          <span>${node.detail}</span>
+          <span>${active ? "Markeret i den valgte visning." : "Sekundær i den valgte visning."}</span>
+        `, event));
+        group.addEventListener("mousemove", (event) => showAiTooltip(`
+          <strong>${node.label}</strong>
+          <span>${node.detail}</span>
+          <span>${active ? "Markeret i den valgte visning." : "Sekundær i den valgte visning."}</span>
+        `, event));
+        group.addEventListener("mouseleave", hideAiTooltip);
+        svg.appendChild(group);
+      });
+    }
+
     function renderAiResources() {
       const activeLens = aiLensData[state.aiLens] ?? aiLensData.power;
+      const scenario = aiScenarioData[state.aiLens] ?? aiScenarioData.power;
 
       els.aiLensControls.innerHTML = Object.entries(aiLensData).map(([key, lens]) => `
         <button class="ai-lens-button ${key === state.aiLens ? "active" : ""}" type="button" data-ai-lens="${key}" aria-pressed="${key === state.aiLens}">
@@ -3185,40 +3627,12 @@
         </button>
       `).join("");
 
-      els.aiLensTitle.textContent = activeLens.title;
-      els.aiLensUnit.textContent = activeLens.unit;
-      els.aiLensCopy.textContent = activeLens.copy;
+      els.aiLensTitle.textContent = scenario.title;
+      els.aiLensUnit.textContent = scenario.unit;
+      els.aiLensCopy.textContent = scenario.copy;
 
-      els.aiScaleList.innerHTML = activeLens.groups.map((group) => `
-        <div class="ai-scale-group">
-          <div class="ai-group-head">
-            <strong>${group.label}</strong>
-            <span>${group.unit}</span>
-          </div>
-          ${group.rows.map((row) => {
-            const start = row.start ?? 0;
-            const end = row.value;
-            const left = Math.max(0, Math.min(100, (start / group.max) * 100));
-            const width = Math.max(row.start == null ? 4 : 8, Math.min(100 - left, ((end - start) / group.max) * 100));
-            const rangeClass = row.start == null ? "" : " range";
-            return `
-              <div class="ai-scale-row">
-                <div class="ai-scale-label">
-                  <strong>${row.label}</strong>
-                  <span>${row.detail}</span>
-                </div>
-                <div class="ai-scale-track" aria-hidden="true">
-                  <div class="ai-scale-fill${rangeClass}" style="left:${left}%; width:${width}%; background:${row.color}"></div>
-                </div>
-                <div class="ai-scale-value">
-                  <strong>${row.display}</strong>
-                  <span>${row.start == null ? "punkt" : "interval"}</span>
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `).join("");
+      renderAiScenarioChart(scenario);
+      renderAiSankey();
 
       els.aiCalloutGrid.innerHTML = activeLens.callouts.map((item) => `
         <div class="ai-callout">
