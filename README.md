@@ -7,7 +7,8 @@ Den bruger en interaktiv graf til at sammenligne rapporterede Scope 1+2+3-tal, m
 Visualiserer techgiganternes CO2-udledninger 📊🌍💻
 
 # Præsentation 
-https://www.canva.com/design/DAHUss6lPjI/owc59cR_YK2rlhV3JTs_gw/view
+[![Gør dit arbejde mere bæredygtigt](https://raw.githubusercontent.com/andracs/big-tech-footprint/refs/heads/main/Webinar.png)](https://www.canva.com/design/DAHUss6lPjI/owc59cR_YK2rlhV3JTs_gw/view)
+
 
 # Todo
 - [ ] Mistral med  
