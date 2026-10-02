@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="da">
-<!-- Changelog: Rettet Anthropic-tilskrivning i "Løfter vs nyeste" til OLMo-modelserie (Ai2/CMU) samt korrigeret Googles 2024 total til 14,2968 Mt CO2e (market-based). Tilføjet fjerde faneblad "AI's ressourceforbrug" og opdateret grønt tema samt kilde-links. -->
+<!-- Changelog (2. okt. 2026): Faktatjek og opdatering, se FAKTATJEK.md. Rettet Googles tidsserie (2023-2024 var forskudt et år) og opdateret til 2026-rapportens omregnede 2019-2025-tal. Microsoft FY25, Amazon/Apple 2025, NVIDIA FY26 (vist som kalenderår 2025), Tencent 2025. Tilføjet Mistral AI og xAI, tendens-emojis, standardvalg = kun stigende udledninger, og fanen "AI-selskaber". -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1429,6 +1429,75 @@
       stroke-linejoin: round;
     }
 
+    .button-row.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .company-group-label {
+      margin: 6px 2px 0;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .trend-badge {
+      font-size: 0.76rem;
+      color: var(--muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .trend-legend {
+      display: grid;
+      gap: 4px;
+      margin-top: 10px;
+      padding: 9px 10px;
+      border: 1px dashed var(--strong-line);
+      border-radius: 7px;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .trend-legend strong {
+      color: var(--ink);
+    }
+
+    .trend-emoji {
+      margin-right: 6px;
+    }
+
+    .chart-panel.compact {
+      min-height: 0;
+    }
+
+    .ai-company-table th,
+    .ai-company-table td {
+      text-align: left;
+    }
+
+    .ai-company-scroll {
+      max-height: none;
+    }
+
+    .ai-company-table td:first-child {
+      font-weight: 750;
+      min-width: 150px;
+    }
+
+    .ai-company-table td small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .ai-company-table .source-link {
+      display: block;
+    }
+
     @media (max-width: 1060px) {
       .below-grid,
       .data-layout,
@@ -1438,7 +1507,12 @@
       .location-layout,
       .prompt-layout,
       .promise-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .below-grid > *,
+      .wide-panel > * {
+        min-width: 0;
       }
 
       .footprint-layout {
@@ -1462,8 +1536,13 @@
 
     @media (max-width: 820px) {
       .footprint-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-areas: "sidebar" "content";
+      }
+
+      .content,
+      .content > * {
+        min-width: 0;
       }
     }
 
@@ -1542,12 +1621,13 @@
       <div>
         <h1>👉Techgiganter løber fra deres løfter. </h1><h2>Faktiske og forventede CO<sub>2</sub>e-udledninger</h2>
         <p class="subtitle">
-          Her kan du sammenligne selskabernes egne klimatal med de seneste offentlige rapporter for Microsoft, Google, Apple, Amazon og Meta/Facebook.
-          OpenAI og Anthropic er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige &aring;rlige Scope 1, 2 og 3-tal.
+          Her kan du sammenligne selskabernes egne klimatal med de seneste offentlige rapporter for Microsoft, Google, Apple, Amazon, Meta/Facebook, NVIDIA og asiatiske techgiganter.
+          AI-selskaberne Mistral AI, OpenAI, Anthropic og xAI er medtaget som datakort, fordi de ikke offentligg&oslash;r sammenlignelige &aring;rlige Scope 1, 2 og 3-tal.
+          Som standard vises kun selskaber, hvis udledninger stiger.
         </p>
       </div>
       <div class="header-actions">
-        <div class="status-chip">Senest verificeret: 6. juni 2026</div>
+        <div class="status-chip">Senest verificeret: 2. oktober 2026</div>
         <button id="toggleFilters" class="sidebar-toggle" type="button" aria-pressed="false">Skjul filtre</button>
       </div>
     </header>
@@ -1555,6 +1635,7 @@
     <nav class="tabs" aria-label="Faner">
       <button type="button" class="tab-button active" data-tab-target="footprint">Footprints</button>
       <button type="button" class="tab-button" data-tab-target="promises">L&oslash;fter vs nyeste</button>
+      <button type="button" class="tab-button" data-tab-target="ai-companies">AI-selskaber</button>
       <button type="button" class="tab-button" data-tab-target="data-centres">Datacentre & brancher</button>
       <button type="button" class="tab-button" data-tab-target="ai-resources">AI's ressourceforbrug</button>
       <button type="button" class="tab-button" data-tab-target="ai-lifecycle">Livscyklus</button>
@@ -1567,11 +1648,13 @@
       <aside class="filter-sidebar" aria-label="Kontroller">
         <div class="control-block">
           <div class="control-title">Virksomheder</div>
-          <div class="button-row" aria-label="V&aelig;lg virksomheder">
+          <div class="button-row three" aria-label="V&aelig;lg virksomheder">
+            <button id="selectRising" type="button" title="Kun selskaber med stigende udledninger (standard)">Stigende</button>
             <button id="selectAll" type="button">Alle</button>
             <button id="selectNone" type="button">Ingen</button>
           </div>
           <div class="company-list" id="companyList"></div>
+          <div class="trend-legend" id="trendLegend"></div>
         </div>
 
         <div class="control-block">
@@ -1626,9 +1709,8 @@
             <div>
               <h2 id="chartTitle">Total Scope 1+2+3, faktisk vs forventet</h2>
               <p class="chart-copy" id="chartCopy">
-                Fuld streg er rapporterede faktiske tal. Stiplet streg er den valgte forventningsmodel. 2025-2026 er som
-                hovedregel forventede tal, fordi de fleste selskaber endnu ikke har offentliggjort fulde, sammenlignelige
-                &aring;rlige emissioner.
+                Fuld streg er rapporterede faktiske tal. Stiplet streg er den valgte forventningsmodel. 2026 er forventede tal;
+                2025 er rapporteret for de fleste vestlige selskaber.
               </p>
             </div>
             <div class="legend" id="legend"></div>
@@ -1717,6 +1799,58 @@
           <strong>Fortolkning:</strong> Status er vores vurdering af, om emissionerne bev&ae;ger sig væk fra målbane eller om kommunikationen ikke længere matcher løftet.
           Det er ikke en juridisk dom over, om et løfte er opgivet.
         </div>
+      </section>
+    </section>
+
+    <section class="wide-panel view-panel" id="panel-ai-companies" data-tab-panel="ai-companies">
+      <section class="chart-panel compact" aria-label="AI-selskaber">
+        <div class="chart-top">
+          <div>
+            <h2>AI-selskaber: hvad ved vi om deres klimaaftryk?</h2>
+            <p class="chart-copy">
+              De rene AI-selskaber offentligg&oslash;r ingen &aring;rlige Scope 1+2+3-tal. Tabellen samler det, der faktisk findes:
+              &aring;rlige firmatal, tal pr. prompt og tr&aelig;ningstal for modeller. Tallene er <strong>ikke</strong> direkte sammenlignelige,
+              fordi systemgr&aelig;nserne er forskellige.
+            </p>
+          </div>
+        </div>
+        <div class="kpi-row" id="aiCompanyKpis"></div>
+      </section>
+
+      <section class="table-panel" aria-label="AI-selskabstabel">
+        <div class="panel-head">
+          <h2>&Aring;benhedstabel</h2>
+          <span>Seneste offentlige datapunkter pr. 2. oktober 2026</span>
+        </div>
+        <div class="table-scroll ai-company-scroll">
+          <table class="ai-company-table">
+            <thead>
+              <tr>
+                <th>Selskab</th>
+                <th>Tendens</th>
+                <th>&Aring;rligt firmaaftryk</th>
+                <th>Pr. prompt / svar</th>
+                <th>Model / tr&aelig;ning</th>
+                <th>Klimam&aring;l</th>
+                <th>Kilder</th>
+              </tr>
+            </thead>
+            <tbody id="aiCompanyTable"></tbody>
+          </table>
+        </div>
+        <div class="method-box">
+          <strong>L&aelig;s med forbehold:</strong> Googles 0,24 Wh / 0,03 g er en median Gemini-tekstprompt med market-based str&oslash;m.
+          Mistrals 1,14 g er en fuld livscyklusanalyse inkl. andel af tr&aelig;ning og hardware. OpenAIs 0,34 Wh er et blogtal uden metode.
+          Metas Llama-tal d&aelig;kker kun tr&aelig;ning (lokationsbaseret; Meta selv angiver 0 t market-based).
+        </div>
+      </section>
+
+      <section class="notes-panel" aria-label="Hold &oslash;je med">
+        <div class="panel-head">
+          <h2>Hold &oslash;je med</h2>
+          <span>Regler og frister, der kan &aelig;ndre billedet</span>
+        </div>
+        <ul class="source-list" id="aiWatchList"></ul>
       </section>
     </section>
 
@@ -1963,57 +2097,54 @@
         id: "microsoft",
         name: "Microsoft",
         color: "#16665c",
-        selected: true,
         target: {
           kind: "reduction",
           baselineYear: 2020,
-          baseline: 12.37,
+          baseline: 12.881,
           targetYear: 2030,
-          targetValue: 6.185,
+          targetValue: 6.4405,
           label: "Reducerer egne udledninger med mere end halvdelen i 2030 og fjerner resten."
         },
         actual: {
-          total: {2020: 12.37, 2021: 14.129, 2022: 16.343, 2023: 16.935, 2024: 15.543},
-          scope1: {2020: 0.1181, 2021: 0.123704, 2022: 0.139413, 2023: 0.14496, 2024: 0.14351},
-          scope2: {2020: 0.456119, 2021: 0.429405, 2022: 0.288029, 2023: 0.393134, 2024: 0.25909},
-          scope3: {2020: 11.796, 2021: 13.576, 2022: 15.916, 2023: 16.397, 2024: 15.14}
+          total: {2020: 12.881, 2021: 13.772, 2022: 13.635, 2023: 16.112, 2024: 16.215, 2025: 20.29},
+          scope1: {2020: 0.1181, 2021: 0.123704, 2022: 0.139413, 2023: 0.14496, 2024: 0.14351, 2025: 0.170887},
+          scope2: {2020: 0.456119, 2021: 0.429405, 2022: 0.288029, 2023: 0.393134, 2024: 0.25909, 2025: 2.707428},
+          scope3: {2020: 12.3068, 2021: 13.2189, 2022: 13.2076, 2023: 15.5739, 2024: 15.8124, 2025: 17.4117}
         },
         source: {
-          title: "Microsoft Environmental Data Fact Sheet 2025",
-          url: "https://aka.ms/SustainabilityFactsheet2025",
-          note: "FY20-FY24 GHG emissions by scope, market-based total."
+          title: "Microsoft 2026 Environmental Data Fact Sheet",
+          url: "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2026-Microsoft-Environmental-Data-Fact-Sheet-PDF.pdf",
+          note: "FY20-FY25 (regnskabs&aring;r slutter 30. juni), market-based total med Microsofts \"management's criteria\" (Table 1B), som er omregnet ift. 2025-faktaarket. Scope 3 er total minus Scope 1 og 2."
         }
       },
       {
         id: "google",
         name: "Google",
         color: "#2450a6",
-        selected: true,
         target: {
-          kind: "netzero",
-          baselineYear: 2020,
-          baseline: 8.7374,
+          kind: "reduction",
+          baselineYear: 2019,
+          baseline: 10.3545,
           targetYear: 2030,
-          targetValue: 0,
-          label: "Net-zero across operations and value chain by 2030."
+          targetValue: 5.1773,
+          label: "Halvere absolutte Scope 1+2+3-udledninger ift. 2019 i 2030 og neutralisere resten med carbon removal (net zero)."
         },
         actual: {
-          total: {2020: 8.7374, 2021: 10.5206, 2022: 11.9003, 2023: 11.9003, 2024: 14.2968},
-          scope1: {2020: 0.0558, 2021: 0.0641, 2022: 0.0912, 2023: 0.0794, 2024: 0.0731},
-          scope2: {2020: 0.9116, 2021: 1.8235, 2022: 2.4921, 2023: 3.4234, 2024: 3.0591},
-          scope3: {2020: 7.77, 2021: 8.633, 2022: 9.317, 2023: 10.794, 2024: 11.1646}
+          total: {2020: 9.3694, 2021: 11.159, 2022: 12.5986, 2023: 14.9201, 2024: 15.9373, 2025: 18.8471},
+          scope1: {2020: 0.0502, 2021: 0.0576, 2022: 0.0894, 2023: 0.0751, 2024: 0.0717, 2025: 0.0861},
+          scope2: {2020: 0.9212, 2021: 1.7694, 2022: 2.4302, 2023: 3.288, 2024: 2.8986, 2025: 2.815},
+          scope3: {2020: 8.398, 2021: 9.332, 2022: 10.079, 2023: 11.557, 2024: 12.967, 2025: 15.946}
         },
         source: {
-          title: "Google Environmental Report 2025",
-          url: "https://sustainability.google/reports/google-2025-environmental-report/",
-          note: "2024 fiscal-year inventory table, Scope 1, Scope 2 market-based and Scope 3."
+          title: "Google Environmental Report 2026",
+          url: "https://sustainability.google/google-2026-environmental-report/",
+          note: "2019-2025 GHG-inventory (omregnet i 2026-rapporten): Scope 1, Scope 2 market-based og fuld GHGP-aligned Scope 3. Googles egen \"ambition-based\" headline (14,47 Mt i 2025) udelader ca. 4,4 Mt Scope 3."
         }
       },
       {
         id: "apple",
         name: "Apple",
         color: "#5b6470",
-        selected: true,
         target: {
           kind: "apple2030",
           baselineYear: 2015,
@@ -2023,47 +2154,45 @@
           label: "Apple 2030: 75% gross reduction from 2015 baseline, then removals for residual emissions."
         },
         actual: {
-          total: {2020: 22.6, 2021: 23.2, 2022: 20.6, 2023: 16.1, 2024: 15.3},
-          scope1: {2020: 0.04743, 2021: 0.0552, 2022: 0.0552, 2023: 0.0552, 2024: 0.0552},
-          scope2: {2020: 0, 2021: 0.00278, 2022: 0.003, 2023: 0.0034, 2024: 0.0033},
-          scope3: {2020: 22.55, 2021: 23.13, 2022: 20.5458, 2023: 15.9828, 2024: 15.11}
+          total: {2020: 22.6, 2021: 23.2, 2022: 20.6, 2023: 16.1, 2024: 15.3, 2025: 15.28},
+          scope1: {2020: 0.04743, 2021: 0.0552, 2022: 0.0552, 2023: 0.0552, 2024: 0.0552, 2025: 0.0552},
+          scope2: {2020: 0, 2021: 0.00278, 2022: 0.003, 2023: 0.0034, 2024: 0.0033, 2025: 0.0011},
+          scope3: {2020: 22.55, 2021: 23.13, 2022: 20.5458, 2023: 15.9828, 2024: 15.2283, 2025: 15.2237}
         },
         source: {
-          title: "Apple Environmental Progress Report 2025",
-          url: "https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2025.pdf",
-          note: "Gross carbon footprint without offsets, FY20-FY24."
+          title: "Apple Environmental Progress Report 2026 (FY2025)",
+          url: "https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2026.pdf",
+          note: "Bruttoaftryk uden offsets, FY20-FY25 (regnskabs&aring;r slutter i september). FY24-FY25 Scope 3 fra 2026-rapportens omregnede tal."
         }
       },
       {
         id: "amazon",
         name: "Amazon",
         color: "#b45f13",
-        selected: true,
         target: {
           kind: "netzero",
-          baselineYear: 2020,
-          baseline: 60.64,
+          baselineYear: 2019,
+          baseline: 51.17,
           targetYear: 2040,
           targetValue: 0,
           label: "The Climate Pledge: net-zero carbon by 2040."
         },
         actual: {
-          total: {2020: 60.64, 2021: 71.54, 2022: 65.1, 2023: 64.38, 2024: 68.25},
-          scope1: {2020: 9.62, 2021: 12.11, 2022: 13.02, 2023: 14.22, 2024: 15.13},
-          scope2: {2020: 5.27, 2021: 4.07, 2022: 3.06, 2023: 2.76, 2024: 2.8},
-          scope3: {2020: 45.75, 2021: 55.36, 2022: 49.02, 2023: 47.4, 2024: 50.32}
+          total: {2020: 60.64, 2021: 71.54, 2022: 65.1, 2023: 65.28, 2024: 69.55, 2025: 80.85},
+          scope1: {2020: 9.62, 2021: 12.11, 2022: 13.02, 2023: 14.22, 2024: 15.13, 2025: 15.37},
+          scope2: {2020: 5.27, 2021: 4.07, 2022: 3.06, 2023: 2.76, 2024: 2.8, 2025: 3.74},
+          scope3: {2020: 45.75, 2021: 55.36, 2022: 49.02, 2023: 48.3, 2024: 51.62, 2025: 61.74}
         },
         source: {
-          title: "Amazon Sustainability Report 2024",
-          url: "https://sustainability.aboutamazon.com/content/dam/sustainability-marketing-site/pdfs/reports-docs/2024-amazon-sustainability-report.pdf",
-          note: "Amazon carbon footprint data table, 2020-2024."
+          title: "Amazon Sustainability Report 2025",
+          url: "https://sustainability.aboutamazon.com/2025-amazon-sustainability-report.pdf",
+          note: "2023-2025 fra 2025-rapporten (omregnet). 2022 fra 2024-rapportens nye metode. OBS: 2020-2021 er efter den gamle metode, s&aring; faldet fra 2021 til 2022 er delvist et metodeskift."
         }
       },
       {
         id: "meta",
         name: "Meta / Facebook",
         color: "#7a3f98",
-        selected: true,
         target: {
           kind: "netzero",
           baselineYear: 2020,
@@ -2081,32 +2210,30 @@
         source: {
           title: "Meta 2025 Sustainability Report",
           url: "https://sustainability.atmeta.com/2025-sustainability-report/",
-          note: "Total GHG emissions with contractual instruments applied, 2020-2024."
+          note: "Total GHG emissions with contractual instruments applied, 2020-2024. 2025-tal var endnu ikke offentliggjort pr. 2. oktober 2026."
         }
       },
       {
         id: "nvidia",
         name: "NVIDIA",
         color: "#76b900",
-        selected: true,
         target: null,
         actual: {
-          total: {2023: 3.585106, 2024: 3.690883, 2025: 6.925529},
-          scope1: {2023: 0.009672, 2024: 0.011896, 2025: 0.012952},
-          scope2: {2023: 0.060671, 2024: 0.040555, 2025: 0},
-          scope3: {2023: 3.514763, 2024: 3.638432, 2025: 6.912577}
+          total: {2022: 3.585106, 2023: 3.690883, 2024: 6.925529, 2025: 10.71133},
+          scope1: {2022: 0.009672, 2023: 0.011896, 2024: 0.012952, 2025: 0.009822},
+          scope2: {2022: 0.060671, 2023: 0.040555, 2024: 0, 2025: 0.000568},
+          scope3: {2022: 3.514763, 2023: 3.638432, 2024: 6.912577, 2025: 10.70094}
         },
         source: {
-          title: "NVIDIA Sustainability Report FY2025",
-          url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2025.pdf",
-          note: "FY23-FY25 GHG emissions. NVIDIA reports 100% renewable electricity in FY25 and SBTi targets, but the headline target is Scope 1+2 and Scope 3 intensity, not a simple total Scope 1+2+3 net-zero path."
+          title: "NVIDIA Sustainability Report FY2026",
+          url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2026.pdf",
+          note: "FY23-FY26. NVIDIAs regnskabs&aring;r slutter i januar, s&aring; FY26 (feb. 2025-jan. 2026) vises som 2025, FY25 som 2024 osv. M&aring;let er Scope 1+2 og Scope 3-intensitet, ikke en simpel Scope 1+2+3 net-zero-bane."
         }
       },
       {
         id: "samsung",
         name: "Samsung Electronics",
         color: "#0f6fbd",
-        selected: false,
         target: null,
         actual: {
           total: {2022: 131.013, 2023: 120.262, 2024: 120.501},
@@ -2117,50 +2244,47 @@
         source: {
           title: "Samsung Electronics Sustainability Report 2025",
           url: "https://www.samsung.com/global/sustainability/media/pdf/Samsung_Electronics_Sustainability_Report_2025_ENG.pdf",
-          note: "2022-2024 market-based Scope 1+2 and Scope 3. Samsung's formal net-zero deadlines differ by division: DX Scope 1+2 by 2030 and DS Scope 1+2 by 2050."
+          note: "2022-2024 market-based Scope 1+2 og Scope 3. 2026-rapporten (2025-tal) udkom 26. juni 2026, men tallene er endnu ikke verificeret her. Samsungs net-zero-deadlines er forskellige pr. division: DX Scope 1+2 i 2030 og DS Scope 1+2 i 2050."
         }
       },
       {
         id: "alibaba",
         name: "Alibaba",
         color: "#f28c20",
-        selected: true,
         target: null,
         actual: {
-          total: {2024: 12.072, 2025: 10.25149},
-          scope1: {2025: 0.474324},
-          scope2: {2025: 1.920925},
-          scope3: {2024: 7.623, 2025: 7.856241}
+          total: {2023: 12.072, 2024: 10.25149},
+          scope1: {2024: 0.474324},
+          scope2: {2024: 1.920925},
+          scope3: {2023: 7.623, 2024: 7.856241}
         },
         source: {
           title: "Alibaba Group ESG Report / FY2025 Annual Report",
           url: "https://www.alibabagroup.com/en-US/esg",
-          note: "FY2025 latest Scope 1, Scope 2 and Scope 3 data. FY2024 total combines reported own-operation emissions with Scope 3 estimated from reported intensity and revenue, so Alibaba is less directly comparable than Samsung/Tencent/Baidu."
+          note: "Regnskabs&aring;ret slutter 31. marts, s&aring; FY2025 (apr. 2024-mar. 2025) vises som 2024 og FY2024 som 2023. FY2024-totalen kombinerer rapporterede egne udledninger med Scope 3 beregnet fra rapporteret intensitet og oms&aelig;tning, s&aring; Alibaba er mindre direkte sammenlignelig."
         }
       },
       {
         id: "tencent",
         name: "Tencent",
         color: "#00a6a6",
-        selected: false,
         target: null,
         actual: {
-          total: {2022: 5.739724, 2023: 5.793824, 2024: 6.05661},
+          total: {2022: 5.739724, 2023: 5.793824, 2024: 6.05661, 2025: 5.965348},
           scope1: {2022: 0.172138, 2023: 0.275374, 2024: 0.121466},
           scope2: {2022: 2.650073, 2023: 2.561328, 2024: 2.863849},
           scope3: {2022: 2.917513, 2023: 2.957122, 2024: 3.071295}
         },
         source: {
-          title: "Tencent ESG Report 2024",
-          url: "https://www.tencent.com/en-us/esg/esg-reports.html",
-          note: "2022-2024 market-based Scope 1+2+3 data, third-party verified according to Tencent's ESG key performance table."
+          title: "Tencent ESG Report 2025",
+          url: "https://static.www.tencent.com/uploads/2026/04/09/34cdfa7393ee49cd5677b28f38c68d74.pdf",
+          note: "2022-2024 market-based Scope 1+2+3 fra ESG-rapport 2024. 2025-total (5,965 Mt) fra ESG-rapport 2025; scope-fordelingen for 2025 er ikke indlagt."
         }
       },
       {
         id: "baidu",
         name: "Baidu",
         color: "#234c9f",
-        selected: true,
         target: null,
         actual: {
           total: {2022: 2.121792, 2023: 2.323459, 2024: 1.992089},
@@ -2175,32 +2299,60 @@
         }
       },
       {
+        id: "mistral",
+        name: "Mistral AI",
+        color: "#e0442e",
+        noCompanyData: true,
+        trendKey: "transparent",
+        target: null,
+        actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
+        extraEvidence: "Livscyklusanalyse (med Carbone 4 og ADEME) af Mistral Large 2: 20,4 kt CO2e, 281.000 m3 vand og 660 kg Sb eq for tr&aelig;ning + 18 m&aring;neders brug (pr. januar 2025); 1,14 g CO2e og 45 ml vand pr. svar p&aring; 400 tokens.",
+        source: {
+          title: "Mistral AI: Our contribution to a global environmental standard for AI (juli 2025)",
+          url: "https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai",
+          note: "Ingen &aring;rlig Scope 1+2+3-opg&oslash;relse for virksomheden, men den mest &aring;bne modelopg&oslash;relse blandt AI-selskaberne."
+        }
+      },
+      {
         id: "openai",
         name: "OpenAI",
         color: "#0b7f83",
-        selected: false,
         noCompanyData: true,
         target: null,
         actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
+        extraEvidence: "Eneste officielle datapunkt: 0,34 Wh og ca. 0,32 ml vand pr. gennemsnitlig ChatGPT-foresp&oslash;rgsel (Sam Altman, juni 2025), uden offentlig metode.",
         source: {
           title: "Ingen offentlig, sammenlignelig &aring;rlig GHG-inventory fundet",
-          url: "https://openai.com/",
-          note: "OpenAI offentligg&oslash;r ikke Scope 1+2+3 virksomhedstal for 2020-2026 i et &aring;rligt sustainability report-format."
+          url: "https://www.datacenterdynamics.com/en/news/sam-altman-chatgpt-queries-consume-034-watt-hours-of-electricity-and-0000085-gallons-of-water/",
+          note: "OpenAI offentligg&oslash;r ikke Scope 1+2+3 virksomhedstal og har intet offentligt klimam&aring;l."
         }
       },
       {
         id: "anthropic",
         name: "Anthropic",
         color: "#8b5b2f",
-        selected: false,
         noCompanyData: true,
         target: null,
         actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
-        extraEvidence: "493 tCO2e er et modeludviklingsdataeksempel for OLMo-modelserie (Ai2/CMU), ikke en årlig virksomhedsinventory for Anthropic.",
+        extraEvidence: "Tilsluttede sig i juni 2026 carbon removal-koalitionen Frontier, men har ikke annonceret aftaler om ren str&oslash;m (PPA'er).",
         source: {
-          title: "Holistically Evaluating the Environmental Impact of Creating Language Models",
-          url: "https://arxiv.org/abs/2503.05804",
-          note: "Modeldata for OLMo-modelserie (Ai2/CMU), ikke sammenlignelige Scope 1+2+3-firmatal."
+          title: "Ingen offentlig, sammenlignelig &aring;rlig GHG-inventory fundet",
+          url: "https://techcrunch.com/2026/06/17/anthropic-becomes-first-ai-startup-to-join-the-frontier-carbon-removal-coalition/",
+          note: "Anthropic offentligg&oslash;r hverken Scope 1+2+3 virksomhedstal, tal pr. foresp&oslash;rgsel eller et klimam&aring;l."
+        }
+      },
+      {
+        id: "xai",
+        name: "xAI",
+        color: "#30343b",
+        noCompanyData: true,
+        target: null,
+        actual: {total: {}, scope1: {}, scope2: {}, scope3: {}},
+        extraEvidence: "Colossus-datacentrene i Memphis og Southaven drives delvist af gasturbiner; NAACP og milj&oslash;organisationer har anlagt Clean Air Act-sag (april 2026) om turbiner uden tilladelse.",
+        source: {
+          title: "Ingen offentlig GHG-inventory; gasturbiner ved Colossus",
+          url: "https://earthjustice.org/press/2026/naacp-asks-court-for-emergency-action-to-stop-illegal-air-pollution-from-xais-data-center-power-plant",
+          note: "xAI offentligg&oslash;r ingen klimadata. Lokal luftforurening (NOx, formaldehyd) fra gasturbiner er dokumenteret af milj&oslash;organisationer og myndigheder."
         }
       }
     ];
@@ -2208,7 +2360,7 @@
     const promiseData = [
       {
         companyId: "microsoft",
-        status: "Afviger fra m\u00e5lbane",
+        status: "Afviger fra målbane",
         statusClass: "bad",
         promise: {
           who: "Microsoft",
@@ -2220,39 +2372,45 @@
           url: "https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/"
         },
         latest: {
-          when: "FY2024 / rapport 2025",
-          summary: "Total Scope 1+2+3 ligger 23,4% over 2020-baseline; Scope 3 er fortsat den store udfordring ved cloud- og AI-udbygning.",
-          quote: "overall emissions are 23.4% higher",
-          quoteLiteral: true,
-          sourceTitle: "Microsoft Environmental Sustainability Report 2025",
-          url: "https://www.microsoft.com/en-us/corporate-responsibility/sustainability/report"
+          when: "FY2025 / rapport juli 2026",
+          summary: "Total Scope 1+2+3 steg 25% på ét år til 20,29 Mt CO2e og ligger ca. 58% over 2020-baseline (12,88 Mt). Scope 2 gik fra ca. 2% til 13% af totalen, fordi Microsoft stoppede med at bruge ikke-additionelle, ubundne VE-certifikater. Den største post er kapitalgoder (datacenterbyggeri, servere, chips).",
+          quote: "20.290.000 t CO2e i FY2025 (management's criteria)",
+          quoteLiteral: false,
+          sourceTitle: "Microsoft 2026 Environmental Data Fact Sheet",
+          url: "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2026-Microsoft-Environmental-Data-Fact-Sheet-PDF.pdf",
+          extra: [
+            {title: "Microsoft 2026 Environmental Sustainability Report", url: "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2026-Microsoft-Environmental-Sustainability-Report-PDF.pdf"}
+          ]
         }
       },
       {
         companyId: "google",
-        status: "M\u00e5l tonet ned",
+        status: "“Moonshot” – langt fra mål",
         statusClass: "bad",
         promise: {
           who: "Google",
           when: "2030",
-          how: "Net-zero for drift og v\u00e6rdik\u00e6de, 24/7 carbon-free energy og carbon removals frem for traditionelle offsets.",
-          quote: "net-zero emissions across all of our operations and value chain by 2030",
+          how: "Net-zero for drift og værdikæde: halvere absolutte Scope 1+2+3 ift. 2019, 24/7 carbon-free energy og carbon removal for resten.",
+          quote: "We aim to reach net-zero emissions across all of our operations and value chain by 2030.",
           quoteLiteral: true,
-          sourceTitle: "Google Environmental Report 2025",
-          url: "https://www.sustainability.google/reports/google-2025-environmental-report/"
+          sourceTitle: "Google Environmental Report 2026",
+          url: "https://sustainability.google/google-2026-environmental-report/"
         },
         latest: {
-          when: "2024-tal / 2025-rapportering",
-          summary: "Udledningerne er 51% over 2019-baseline, og eksterne medier rapporterede i 2025, at net-zero-headlinen blev fjernet fra Googles bæredygtighedsside.",
-          quote: "National Observer / Tom's Hardware: removed its first headline",
-          quoteLiteral: false,
-          sourceTitle: "National Observer / Tom's Hardware, 2025",
-          url: "https://www.nationalobserver.com/2025/09/04/investigations/google-net-zero-sustainability"
+          when: "2025-tal / rapport juni 2026",
+          summary: "Fuld GHG-opgørelse: 18,85 Mt CO2e i 2025, +18% på ét år og +82% over 2019 – i stedet for de -50%, målet kræver. Googles egen “ambition-based” headline (14,47 Mt, +81%) udelader ca. 4,4 Mt Scope 3. Elforbruget steg 37%, og rapporten skriver, at AI-udbygningen går hurtigere end elnettet dekarboniseres. Medier rapporterede i 2025, at net-zero-headlinen blev fjernet fra Googles bæredygtighedsside.",
+          quote: "reaching our climate moonshot is getting harder",
+          quoteLiteral: true,
+          sourceTitle: "Google Environmental Report 2026",
+          url: "https://sustainability.google/google-2026-environmental-report/",
+          extra: [
+            {title: "National Observer, 2025", url: "https://www.nationalobserver.com/2025/09/04/investigations/google-net-zero-sustainability"}
+          ]
         }
       },
       {
         companyId: "apple",
-        status: "T\u00e6ttere p\u00e5 m\u00e5l",
+        status: "Tættere på mål",
         statusClass: "ok",
         promise: {
           who: "Apple",
@@ -2264,34 +2422,41 @@
           url: "https://www.apple.com/environment/"
         },
         latest: {
-          when: "FY2024 / rapport 2025-2026",
-          summary: "Apple rapporterer mere end 60% reduktion fra 2015 og et 2024-footprint p\u00e5 15,3 Mt CO2e, men m\u00e5let kr\u00e6ver yderligere reduktion til ca. 9,6 Mt plus removals.",
-          quote: "reduced emissions by more than 60 percent",
+          when: "FY2025 / rapport april 2026",
+          summary: "Bruttoaftrykket er ca. 15,3 Mt CO2e – mere end 60% under 2015 (38,4 Mt), men stort set fladt siden FY2024. Målet kræver ca. 9,6 Mt i 2030, dvs. yderligere ca. 5,7 Mt reduktion. I august 2025 forbød en tysk domstol Apple at markedsføre Apple Watch som “CO2-neutral”, fordi kompensationen hviler på skovprojekter med usikker varighed.",
+          quote: "Apple surpasses 60 percent reduction in global greenhouse gas emissions",
           quoteLiteral: true,
-          sourceTitle: "Apple Environmental Progress Report / Environment",
-          url: "https://www.apple.com/environment/"
+          sourceTitle: "Apple Newsroom, april 2025",
+          url: "https://www.apple.com/newsroom/2025/04/apple-surpasses-60-percent-reduction-in-global-greenhouse-gas-emissions/",
+          extra: [
+            {title: "Apple Environmental Progress Report 2026", url: "https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2026.pdf"},
+            {title: "Dom om Apple Watch (The Register)", url: "https://www.theregister.com/2025/08/26/carbon_neutral_apple_watch/"}
+          ]
         }
       },
       {
         companyId: "amazon",
-        status: "Stiger igen",
+        status: "Stiger kraftigt",
         statusClass: "bad",
         promise: {
           who: "Amazon",
           when: "2040",
-          how: "The Climate Pledge: net-zero carbon 10 \u00e5r f\u00f8r Paris-aftalens 2050-m\u00e5l.",
+          how: "The Climate Pledge: net-zero carbon 10 år før Paris-aftalens 2050-mål.",
           quote: "net-zero carbon by 2040",
           quoteLiteral: true,
           sourceTitle: "The Climate Pledge",
           url: "https://www.theclimatepledge.com/"
         },
         latest: {
-          when: "2024",
-          summary: "Amazon faldt i 2023, men steg igen til 68,25 Mt CO2e i 2024, ca. 12,6% over 2020-niveauet.",
-          quote: "increased by 6%",
-          quoteLiteral: true,
-          sourceTitle: "Amazon Sustainability Report 2024",
-          url: "https://sustainability.aboutamazon.com/content/dam/sustainability-marketing-site/pdfs/reports-docs/2024-amazon-sustainability-report.pdf"
+          when: "2025 / rapport juli 2026",
+          summary: "80,85 Mt CO2e i 2025: +16% på ét år og ca. 58% over 2019, hvor The Climate Pledge blev lanceret. Datacenterbyggeri, indkøbt strøm (+34%) og leveringsbrændstof driver stigningen. SBTi fjernede i 2023 Amazons forpligtelse fra sin liste, fordi selskabet ikke fik valideret et mål.",
+          quote: "80,85 mio. t CO2e (2025)",
+          quoteLiteral: false,
+          sourceTitle: "Amazon Sustainability Report 2025",
+          url: "https://sustainability.aboutamazon.com/2025-amazon-sustainability-report.pdf",
+          extra: [
+            {title: "SBTi fjerner Amazon (DCD, 2023)", url: "https://www.datacenterdynamics.com/en/news/amazon-is-dropped-by-science-based-targets-initiative/"}
+          ]
         }
       },
       {
@@ -2301,15 +2466,15 @@
         promise: {
           who: "Meta / Facebook",
           when: "2030",
-          how: "Net-zero for hele v\u00e6rdik\u00e6den, med 100% vedvarende elmatch og leverand\u00f8rprogrammer som centrale redskaber.",
+          how: "Net-zero for hele værdikæden. Delmål: Scope 1+2 -42% i 2031 ift. 2021, og Scope 3 må ikke overstige 2021-niveau i 2031.",
           quote: "net zero emissions across our value chain in 2030",
           quoteLiteral: true,
           sourceTitle: "Meta Sustainability Report",
           url: "https://sustainability.atmeta.com/2025-sustainability-report/"
         },
         latest: {
-          when: "2024 / data index 2025",
-          summary: "Meta rapporterer 8,200595 Mt CO2e i 2024 med kontraktuelle instrumenter; tallene er signifikant over 2020 og domineret af Scope 3.",
+          when: "2024 / rapport 2025",
+          summary: "Meta rapporterer 8,2 Mt CO2e i 2024 med kontraktuelle instrumenter (15,6 Mt lokationsbaseret). Scope 3 (8,15 Mt) ligger ca. 41% over 2021-niveauet (5,77 Mt), som delmålet siger ikke må overskrides i 2031. 2025-tallene var ikke offentliggjort pr. 2. oktober 2026.",
           quote: "8,200,595 metric tons CO2e",
           quoteLiteral: false,
           sourceTitle: "Meta 2025 Sustainability Report",
@@ -2318,7 +2483,7 @@
       },
       {
         companyId: "nvidia",
-        status: "Scope 3 springer op",
+        status: "Scope 3 tredoblet",
         statusClass: "bad",
         promise: {
           who: "NVIDIA",
@@ -2330,12 +2495,15 @@
           url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2025.pdf"
         },
         latest: {
-          when: "FY2025",
-          summary: "NVIDIA har reduceret Scope 2 market-based til nul via 100% renewable electricity, men Scope 3 næsten fordobles fra FY24 til FY25, drevet af købt varer/tjenester i AI-hardwarekæden.",
-          quote: "Scope 3 6,912,577",
+          when: "FY2026 (feb. 2025 – jan. 2026)",
+          summary: "Scope 3 steg til 10,70 Mt CO2e (fra 6,91 Mt i FY25 og 3,64 Mt i FY24) – næsten en tredobling på to år, drevet af indkøbte varer i AI-hardwarekæden. Scope 1+2 er tilsammen under 0,011 Mt, så de officielle mål rammer under 0,1% af aftrykket.",
+          quote: "Scope 3: 10.700.940 t CO2e (FY2026)",
           quoteLiteral: false,
-          sourceTitle: "NVIDIA Sustainability Report FY2025",
-          url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2025.pdf"
+          sourceTitle: "NVIDIA Sustainability Report FY2026",
+          url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2026.pdf",
+          extra: [
+            {title: "Greenpeace East Asia, 2026", url: "https://www.greenpeace.org/eastasia/press/68806/nvidias-fy2026-sustainability-report-reveals-scope-3-emissions-have-nearly-tripled-since-2024-greenpeace-response/"}
+          ]
         }
       },
       {
@@ -2353,7 +2521,7 @@
         },
         latest: {
           when: "2024",
-          summary: "Samsung rapporterer ca. 120,5 Mt CO2e i Scope 1+2+3 i 2024. Scope 3 alene er 105,6 Mt CO2e, især use-phase og leverandørkæde.",
+          summary: "Samsung rapporterer ca. 120,5 Mt CO2e i Scope 1+2+3 i 2024. Scope 3 alene er 105,6 Mt CO2e, især use-phase og leverandørkæde. Faldet siden 2022 skyldes mest Scope 3; Scope 2 stiger med chipproduktionen.",
           quote: "Other indirect emissions (Scope 3) 105,612",
           quoteLiteral: false,
           sourceTitle: "Samsung Sustainability Report 2025",
@@ -2374,8 +2542,8 @@
           url: "https://www.businesswire.com/news/home/20211217005249/en/Alibaba-Group-Announces-Carbon-Neutrality-Goal-by-2030"
         },
         latest: {
-          when: "FY2025",
-          summary: "Alibaba rapporterer 2,395 Mt CO2e i egne Scope 1+2-operationer og 7,856 Mt CO2e i Scope 3. FY2024-totalen i grafen er delvist beregnet fra rapporteret intensitet og omsætning.",
+          when: "FY2025 (apr. 2024 – mar. 2025)",
+          summary: "Alibaba rapporterer 2,395 Mt CO2e i egne Scope 1+2-operationer og 7,856 Mt CO2e i Scope 3. FY2024-totalen i grafen er delvist beregnet fra rapporteret intensitet og omsætning. “Scope 3+” er undgåede udledninger hos kunder, ikke reduktioner i Alibabas eget aftryk.",
           quote: "net Scope 1+2: 2.395 Mt CO2e; Scope 3: 7.856 Mt CO2e",
           quoteLiteral: false,
           sourceTitle: "Alibaba FY2025 Annual Report / ESG",
@@ -2384,24 +2552,24 @@
       },
       {
         companyId: "tencent",
-        status: "Stiger svagt",
+        status: "Fladt – langt fra 2030",
         statusClass: "bad",
         promise: {
           who: "Tencent",
           when: "2030",
-          how: "Carbon neutrality i egne operationer og forsyningskæde; senere SBTi-mål inkluderer absolutte reduktioner i Scope 1+2 og Scope 3.",
+          how: "Carbon neutrality i egne operationer og forsyningskæde; SBTi-validerede mål: Scope 1+2 -70% og Scope 3 -30% i 2030 ift. 2021.",
           quote: "Carbon Neutrality Target and Roadmap",
           quoteLiteral: false,
           sourceTitle: "Tencent carbon neutrality roadmap",
           url: "https://www.tencent.com/attachments/carbon-neutrality/tencent-carbon-neutrality-factsheet.pdf"
         },
         latest: {
-          when: "2024",
-          summary: "Tencent rapporterer 6,0566 Mt CO2e i 2024, ca. 3,1% over 2021-baseline ifølge rapporteringen og lidt over 2022/2023-niveau.",
-          quote: "6,056,610.1 tCO2e",
+          when: "2025",
+          summary: "Tencent rapporterer 5,97 Mt CO2e i 2025, lidt under 2024 (6,06 Mt), men stadig over 2022-niveau. Andelen grøn strøm i egne datacentre steg fra 49,8% til 82,9%; i lejede datacentre fra 3,8% til 21,4%.",
+          quote: "5.965.348 t CO2e (2025)",
           quoteLiteral: false,
-          sourceTitle: "Tencent ESG Report 2024",
-          url: "https://www.tencent.com/en-us/esg/esg-reports.html"
+          sourceTitle: "Tencent ESG Report 2025",
+          url: "https://static.www.tencent.com/uploads/2026/04/09/34cdfa7393ee49cd5677b28f38c68d74.pdf"
         }
       },
       {
@@ -2419,11 +2587,36 @@
         },
         latest: {
           when: "2024",
-          summary: "Baidu rapporterer ca. 1,992 Mt CO2e market-based i 2024, ned fra ca. 2,323 Mt i 2023. Scope 3-definitionen er smallere end hos mange hyperscalers.",
+          summary: "Baidu rapporterer ca. 1,992 Mt CO2e market-based i 2024, ned fra ca. 2,323 Mt i 2023. Scope 3-definitionen er smallere end hos mange hyperscalers, så totalen er ikke direkte sammenlignelig.",
           quote: "Total GHG emissions (market-based)",
           quoteLiteral: false,
           sourceTitle: "Baidu 2024 ESG Report",
           url: "https://esgs.cdn.bcebos.com/2025/04/28/a2/39a2aaa4f728f4e2d0aebaff346c045e.pdf"
+        }
+      },
+      {
+        companyId: "mistral",
+        status: "Åben LCA – ingen årstal",
+        statusClass: "missing",
+        promise: {
+          who: "Mistral AI",
+          when: "Ingen offentlig net-zero-deadline fundet",
+          how: "Publicerede i juli 2025 den første fulde livscyklusanalyse (LCA) af en sprogmodel, lavet med Carbone 4 og ADEME efter AFNOR Frugal AI-metoden. Lover løbende opdateringer og opfordrer andre AI-selskaber til samme standard.",
+          quote: "Mistral Large 2: 20,4 kt CO2e, 281.000 m3 vand og 660 kg Sb eq (træning + 18 måneders brug, pr. januar 2025)",
+          quoteLiteral: false,
+          sourceTitle: "Mistral AI, juli 2025",
+          url: "https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai"
+        },
+        latest: {
+          when: "2025-2026",
+          summary: "Pr. svar på 400 tokens i Le Chat: 1,14 g CO2e og 45 ml vand inkl. andel af træning og hardware – ikke direkte sammenligneligt med Googles snævrere promptmåling. Mistral har ingen årlig Scope 1+2+3-opgørelse, men bygger hurtigt ud: Mistral Compute i Essonne (ca. 44 MW, fransk lav-CO2 atomstrøm) og et datacenter i Sverige, med mål om ca. 1 GW europæisk compute i 2030.",
+          quote: "1,14 g CO2e og 45 ml vand pr. svar",
+          quoteLiteral: false,
+          sourceTitle: "Mistral AI, juli 2025",
+          url: "https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai",
+          extra: [
+            {title: "Udbygning til 1 GW (VentureBeat)", url: "https://venturebeat.com/infrastructure/mistral-ai-wants-to-build-1-gigawatt-of-european-compute-by-2030-and-lock-in-customers-now"}
+          ]
         }
       },
       {
@@ -2432,18 +2625,21 @@
         statusClass: "missing",
         promise: {
           who: "OpenAI",
-          when: "Ingen offentlig 2020-2026 Scope 1+2+3-neutralitetsdeadline fundet",
-          how: "OpenAI beskriver massiv compute-infrastruktur, men offentligg\u00f8r ikke en sammenlignelig \u00e5rlig firmainventory.",
+          when: "Ingen offentlig klimamål eller net-zero-deadline fundet",
+          how: "OpenAI bygger massiv compute-infrastruktur (Stargate), men offentliggør ikke en sammenlignelig årlig firmainventory.",
           quote: "No comparable annual company GHG inventory found",
           sourceTitle: "OpenAI compute infrastructure statement",
           url: "https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/"
         },
         latest: {
           when: "2025-2026",
-          summary: "Sammenligning med Microsoft/Google/Amazon er derfor kun mulig via datacenter- og elforbrugsproxier, ikke via OpenAI's egen Scope-rapportering.",
-          quote: "compute infrastructure",
-          sourceTitle: "OpenAI",
-          url: "https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/"
+          summary: "Eneste officielle datapunkt er Sam Altmans blog (juni 2025): ca. 0,34 Wh og 0,32 ml vand pr. gennemsnitlig ChatGPT-forespørgsel, uden metode og uden træning. Som amerikansk selskab med over 1 mia. USD i omsætning kan OpenAI blive omfattet af Californiens SB 253 (Scope 1+2-frist 10. november 2026).",
+          quote: "0,34 Wh pr. gennemsnitlig forespørgsel",
+          sourceTitle: "Datacenter Dynamics om Altmans tal",
+          url: "https://www.datacenterdynamics.com/en/news/sam-altman-chatgpt-queries-consume-034-watt-hours-of-electricity-and-0000085-gallons-of-water/",
+          extra: [
+            {title: "SB 253-frist (BDO)", url: "https://www.bdo.com/insights/sustainability-and-esg/california-issues-guidance-for-2026-sb-253-ghg-reporting-submissions"}
+          ]
         }
       },
       {
@@ -2452,20 +2648,42 @@
         statusClass: "missing",
         promise: {
           who: "Anthropic",
-          when: "Ingen offentlig 2020-2026 Scope 1+2+3-neutralitetsdeadline fundet",
-          how: "Der findes model-/forskningsdata for AI-udvikling, men ikke en fuld \u00e5rlig virksomhedsinventory p\u00e5 linje med de store b\u00f8rsnoterede selskaber.",
-          quote: "Ingen offentlig firmadata; 493 tCO2e er fra OLMo-modelserie (Ai2/CMU), ikke fra Anthropic's samlede drift.",
+          when: "Ingen offentlig klimamål eller net-zero-deadline fundet",
+          how: "Ingen offentlig bæredygtighedsrapport, intet klimamål og ingen tal pr. forespørgsel. Køber carbon removal via Frontier (juni 2026).",
+          quote: "Ingen offentlig Scope 1+2+3-opgørelse fundet",
           quoteLiteral: false,
-          sourceTitle: "arXiv 2503.05804",
-          url: "https://arxiv.org/abs/2503.05804"
+          sourceTitle: "TechCrunch, juni 2026",
+          url: "https://techcrunch.com/2026/06/17/anthropic-becomes-first-ai-startup-to-join-the-frontier-carbon-removal-coalition/"
         },
         latest: {
-          when: "2025",
-          summary: "Det konkrete datapunkt d\u00e6kker modelskabelse og -udvikling, ikke Anthropic's samlede drift, leverand\u00f8rk\u00e6de og datacenterforbrug.",
-          quote: "Ai2/CMU OLMo-modelserie: 493 tCO2e",
+          when: "2026",
+          summary: "Anthropic er det første AI-startup i carbon removal-koalitionen Frontier, men har ifølge Heatmap ikke annonceret en eneste aftale om ren strøm. Carbon removal reducerer hverken elforbruget, presset på elnettet eller det lokale vandforbrug. Kan ligesom OpenAI blive omfattet af Californiens SB 253.",
+          quote: "Carbon removal, men ingen PPA'er",
           quoteLiteral: false,
-          sourceTitle: "arXiv 2503.05804",
-          url: "https://arxiv.org/abs/2503.05804"
+          sourceTitle: "Heatmap News, 2026",
+          url: "https://heatmap.news/climate/anthropic-carbon-emissions"
+        }
+      },
+      {
+        companyId: "xai",
+        status: "Gasturbiner, ingen tal",
+        statusClass: "missing",
+        promise: {
+          who: "xAI",
+          when: "Ingen offentlig klimamål fundet",
+          how: "Ingen klimarapportering. Træningsklyngerne Colossus 1 (Memphis) og Colossus 2 (Southaven, Mississippi) får strøm fra bl.a. midlertidige gasturbiner.",
+          quote: "Ingen offentlig Scope 1+2+3-opgørelse fundet",
+          quoteLiteral: false,
+          sourceTitle: "Earthjustice, 2026",
+          url: "https://earthjustice.org/press/2026/naacp-asks-court-for-emergency-action-to-stop-illegal-air-pollution-from-xais-data-center-power-plant"
+        },
+        latest: {
+          when: "2026",
+          summary: "NAACP og miljøorganisationer anlagde i april 2026 en Clean Air Act-sag mod xAI for gasturbiner uden tilladelse ved Colossus 2. Det er et eksempel på, at AI-udbygning også giver lokal luftforurening, ikke kun CO2.",
+          quote: "Clean Air Act-søgsmål, april 2026",
+          quoteLiteral: false,
+          sourceTitle: "Earthjustice, 2026",
+          url: "https://earthjustice.org/press/2026/naacp-asks-court-for-emergency-action-to-stop-illegal-air-pollution-from-xais-data-center-power-plant"
         }
       }
     ];
@@ -2504,11 +2722,11 @@
         url: "https://www.iea.org/reports/energy-and-ai/energy-supply-for-ai"
       },
       {
-        name: "International luftfart",
+        name: "Luftfart (alle flyselskaber)",
         year: "2024",
         value: 942,
         color: "#7a3f98",
-        note: "IATA gross CO2 for airline sector.",
+        note: "IATA gross CO2 for hele flybranchen, inkl. indenrigsflyvning (netto 933 Mt efter SAF/offsets).",
         sourceTitle: "IATA 2024 Aviation Emissions",
         url: "https://www.iata.org/en/publications/economics/chart-week/chart-of-the-week-28-november-2025/"
       },
@@ -2522,11 +2740,11 @@
         url: "https://edgar.jrc.ec.europa.eu/report_2024"
       },
       {
-        name: "Cementproduktion",
+        name: "Cement, procesemissioner",
         year: "2022",
-        value: 2600,
+        value: 1610,
         color: "#5b6470",
-        note: "Procesemissioner plus fossil varme i cementproduktion, st\u00f8rrelsesorden.",
+        note: "Kun procesemissioner fra kalcinering (Global Carbon Project). Med br\u00e6ndsel til ovnene er cementens samlede CO2 ca. 2,5-2,7 Gt.",
         sourceTitle: "Global Carbon Project / CICERO dataset",
         url: "https://zenodo.org/records/10707604"
       }
@@ -2878,12 +3096,17 @@
       },
       {
         title: "Åbenhed er stadig den største mangel",
-        body: "Google har publiceret en metode for Gemini, men tilsvarende sammenlignelige tal findes ikke bredt for OpenAI, Anthropic og andre. Derfor bør man markere datamangler tydeligt.",
-        source: "Google + offentlig rapportering"
+        body: "Google har publiceret en metode for Gemini, Mistral en fuld livscyklusanalyse og Meta træningstal i Llama-modelkort. OpenAI, Anthropic og xAI offentliggør ingen sammenlignelige tal. Derfor bør man markere datamangler tydeligt.",
+        source: "Google, Mistral, Meta + offentlig rapportering"
       }
     ];
 
     const aiKpiFacts = [
+      {
+        value: "485 TWh",
+        label: "Globalt elforbrug fra datacentre i 2025 (+17%); AI-fokuserede datacentre brugte 155 TWh (+50%)",
+        source: "IEA, april 2026"
+      },
       {
         value: "415 TWh",
         label: "Globalt elforbrug fra datacentre i 2024, ca. 1,5% af verdens elforbrug",
@@ -2928,6 +3151,11 @@
 
     const aiSources = [
       {
+        title: "IEA: Key Questions on Energy and AI (april 2026)",
+        url: "https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary",
+        note: "Opdatering: datacentre brugte ca. 485 TWh i 2025 (+17%), heraf 155 TWh i AI-fokuserede datacentre (+50%). Forventet ca. 950 TWh i 2030, ca. 3% af verdens elforbrug."
+      },
+      {
         title: "IEA: Energy and AI",
         url: "https://www.iea.org/reports/energy-and-ai/executive-summary",
         note: "Globalt overblik: datacentre brugte ca. 415 TWh i 2024, IEA's base case når ca. 945 TWh i 2030, og 2035-cases spænder fra ca. 700 til 1.700 TWh."
@@ -2960,11 +3188,11 @@
     ];
 
     const lifecycleSources = [
-      aiSources[0],
-      aiSources[2],
+      aiSources[1],
       aiSources[3],
       aiSources[4],
       aiSources[5],
+      aiSources[6],
       {
         title: "Big-tech sustainability reports",
         url: "https://www.microsoft.com/en-us/corporate-responsibility/sustainability/report",
@@ -3135,7 +3363,7 @@
     ];
 
     const locationSources = [
-      aiSources[2],
+      aiSources[3],
       {
         title: "U.S. EIA: CO2 per kWh of U.S. electricity",
         url: "https://www.eia.gov/tools/faqs/faq.php?id=74&t=11",
@@ -3196,14 +3424,212 @@
     ];
 
     const promptSources = [
-      aiSources[0],
-      aiSources[2],
+      aiSources[1],
+      aiSources[3],
       {
         title: "Google technical paper: Measuring AI at Google Scale",
         url: "https://services.google.com/fh/files/misc/measuring_the_environmental_impact_of_delivering_ai_at_google_scale.pdf",
         note: "Teknisk metodebaggrund for promptmålingen. 10x og 100x profilerne i fanen er følsomhedsantagelser, ikke Google-tal."
       }
     ];
+
+    const aiCompanyRows = [
+      {
+        companyId: "google",
+        name: "Google / Gemini",
+        annual: "18,85 Mt CO2e (2025)",
+        annualNote: "Fuld GHG-opgørelse; +18% på ét år",
+        prompt: "0,24 Wh · 0,03 g CO2e · 0,26 ml vand",
+        promptNote: "Median Gemini Apps-tekstprompt, maj 2025; 33x lavere energi end maj 2024",
+        model: "Ingen tal pr. Gemini-model",
+        target: "Net zero 2030 (nu kaldt “moonshot”)",
+        sources: [
+          {title: "Google Environmental Report 2026", url: "https://sustainability.google/google-2026-environmental-report/"},
+          {title: "Google: måling af AI-inferens", url: "https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference"}
+        ]
+      },
+      {
+        companyId: "microsoft",
+        name: "Microsoft (Copilot, Azure OpenAI)",
+        annual: "20,29 Mt CO2e (FY2025)",
+        annualNote: "+25% på ét år; Azure er en af OpenAIs vigtigste cloud-leverandører",
+        prompt: "Ingen",
+        model: "Ingen",
+        target: "Carbon negative 2030",
+        sources: [
+          {title: "Microsoft 2026 Data Fact Sheet", url: "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2026-Microsoft-Environmental-Data-Fact-Sheet-PDF.pdf"}
+        ]
+      },
+      {
+        companyId: "meta",
+        name: "Meta (Llama)",
+        annual: "8,2 Mt CO2e (2024)",
+        annualNote: "2025-tal endnu ikke offentliggjort",
+        prompt: "Ingen",
+        model: "Llama 3.1 (8B+70B+405B): 11.390 t CO2e · Llama 4 Scout+Maverick: 1.999 t CO2e",
+        modelNote: "Kun træning, lokationsbaseret. Meta angiver 0 t market-based pga. VE-certifikater.",
+        target: "Net zero i værdikæden 2030",
+        sources: [
+          {title: "Llama 3.1-modelkort", url: "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"},
+          {title: "Llama 4-modelkort", url: "https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md"}
+        ]
+      },
+      {
+        companyId: "amazon",
+        name: "Amazon (AWS, Bedrock, Nova)",
+        annual: "80,85 Mt CO2e (2025)",
+        annualNote: "+16% på ét år; AWS er en af Anthropics vigtigste cloud-leverandører",
+        prompt: "Ingen",
+        model: "Ingen",
+        target: "Net zero 2040",
+        sources: [
+          {title: "Amazon Sustainability Report 2025", url: "https://sustainability.aboutamazon.com/2025-amazon-sustainability-report.pdf"}
+        ]
+      },
+      {
+        companyId: "nvidia",
+        name: "NVIDIA (AI-chips)",
+        annual: "10,71 Mt CO2e (FY2026)",
+        annualNote: "99,9% Scope 3; tredoblet på to år",
+        prompt: "–",
+        model: "–",
+        target: "Scope 1+2 -50% i FY2030 + Scope 3-intensitet",
+        sources: [
+          {title: "NVIDIA Sustainability Report FY2026", url: "https://images.nvidia.com/aem-dam/Solutions/documents/NVIDIA-Sustainability-Report-Fiscal-Year-2026.pdf"}
+        ]
+      },
+      {
+        companyId: "mistral",
+        name: "Mistral AI (Le Chat, Mistral Large)",
+        annual: "Ingen årlig opgørelse",
+        annualNote: "Udbygger til ca. 1 GW compute i 2030",
+        prompt: "1,14 g CO2e · 45 ml vand",
+        promptNote: "Pr. svar på 400 tokens; fuld LCA inkl. andel af træning og hardware",
+        model: "Mistral Large 2: 20,4 kt CO2e · 281.000 m3 vand · 660 kg Sb eq",
+        modelNote: "Træning + 18 måneders brug pr. januar 2025 (Carbone 4, ADEME)",
+        target: "Intet offentligt",
+        sources: [
+          {title: "Mistral AI, juli 2025", url: "https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai"}
+        ]
+      },
+      {
+        companyId: "openai",
+        name: "OpenAI (ChatGPT)",
+        annual: "Ingen",
+        prompt: "0,34 Wh · ca. 0,32 ml vand",
+        promptNote: "“Gennemsnitlig forespørgsel” ifølge Sam Altman (juni 2025), uden metode",
+        model: "GPT-3: ca. 552 t CO2e (eksternt estimat); nyere modeller: ingen tal",
+        target: "Intet offentligt",
+        sources: [
+          {title: "DCD om Altmans tal", url: "https://www.datacenterdynamics.com/en/news/sam-altman-chatgpt-queries-consume-034-watt-hours-of-electricity-and-0000085-gallons-of-water/"},
+          {title: "Patterson m.fl. 2021 (GPT-3)", url: "https://arxiv.org/abs/2104.10350"}
+        ]
+      },
+      {
+        companyId: "anthropic",
+        name: "Anthropic (Claude)",
+        annual: "Ingen",
+        prompt: "Ingen",
+        model: "Ingen",
+        target: "Intet offentligt; køber carbon removal via Frontier (2026)",
+        sources: [
+          {title: "TechCrunch, juni 2026", url: "https://techcrunch.com/2026/06/17/anthropic-becomes-first-ai-startup-to-join-the-frontier-carbon-removal-coalition/"},
+          {title: "Heatmap News", url: "https://heatmap.news/climate/anthropic-carbon-emissions"}
+        ]
+      },
+      {
+        companyId: "xai",
+        name: "xAI (Grok)",
+        annual: "Ingen",
+        prompt: "Ingen",
+        model: "Ingen",
+        target: "Intet offentligt; gasturbiner ved Colossus",
+        sources: [
+          {title: "Earthjustice, 2026", url: "https://earthjustice.org/press/2026/naacp-asks-court-for-emergency-action-to-stop-illegal-air-pollution-from-xais-data-center-power-plant"}
+        ]
+      },
+      {
+        companyId: null,
+        trendKey: "transparent",
+        name: "Ai2 (OLMo, nonprofit)",
+        annual: "–",
+        prompt: "–",
+        model: "493 t CO2e og ca. 2,8 mio. liter vand for en serie OLMo-modeller",
+        modelNote: "Inkl. udviklingsfasen, som de fleste udelader",
+        target: "–",
+        sources: [
+          {title: "arXiv 2503.05804", url: "https://arxiv.org/abs/2503.05804"}
+        ]
+      }
+    ];
+
+    const aiCompanyKpiFacts = [
+      {value: "0 af 4", label: "rene AI-selskaber (Mistral, OpenAI, Anthropic, xAI) med en årlig Scope 1+2+3-opgørelse", source: "Gennemgang pr. 2. okt. 2026"},
+      {value: "20,4 kt CO2e", label: "Mistral Large 2, træning + 18 måneders brug – den eneste fulde model-LCA fra et AI-selskab", source: "Mistral AI / Carbone 4 / ADEME, 2025"},
+      {value: "10. nov. 2026", label: "Frist for Scope 1+2-rapportering under Californiens SB 253 for amerikanske selskaber med over 1 mia. USD i omsætning", source: "CARB / BDO, 2026"}
+    ];
+
+    const aiWatchItems = [
+      {
+        title: "Californien SB 253: Scope 1+2 senest 10. november 2026",
+        url: "https://www.bdo.com/insights/sustainability-and-esg/california-issues-guidance-for-2026-sb-253-ghg-reporting-submissions",
+        note: "Amerikanske selskaber med over 1 mia. USD i omsætning, der driver forretning i Californien, skal indberette Scope 1+2 (fristen blev rykket fra 10. august). Scope 3 forventes fra 2027. Kan give de første officielle tal for OpenAI, Anthropic og xAI."
+      },
+      {
+        title: "EU AI Act: energiforbrug til træning skal dokumenteres",
+        url: "https://artificialintelligenceact.eu/annex/11/",
+        note: "Siden august 2025 skal udbydere af general-purpose AI-modeller dokumentere kendt eller estimeret energiforbrug for træning over for AI-kontoret. Oplysningerne er ikke automatisk offentlige."
+      },
+      {
+        title: "Mistrals LCA som standard",
+        url: "https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai",
+        note: "Mistral bidrager med sine tal til ADEMEs Base Empreinte og opfordrer andre til at bruge samme metode (AFNOR Frugal AI). En opdateret LCA for nyere modeller ville gøre det muligt at se en tendens."
+      },
+      {
+        title: "Næste rapporter",
+        url: "https://sustainability.atmeta.com/",
+        note: "Metas 2025-tal (typisk sensommer/efterår) og Samsungs 2026-rapport (udkom 26. juni 2026) er endnu ikke indlagt i grafen."
+      }
+    ];
+
+    const TRENDS = {
+      rising: {key: "rising", rank: 0, emoji: "\u{1F534}\u{1F4C8}", label: "Stigende", group: "Stigende udledning (vises som standard)", long: "Dårlig tendens: udledningerne stiger."},
+      falling: {key: "falling", rank: 1, emoji: "\u{1F7E1}\u{1F4C9}", label: "Faldende", group: "Faldende udledning", long: "Middel: udledningerne falder, men ikke nok til målet – eller med forbehold for metode og offsets."},
+      transparent: {key: "transparent", rank: 2, emoji: "\u{1F52C}", label: "Åben LCA", group: "Ingen årstal", long: "Ingen årlig opgørelse, så tendensen er ukendt – men åben livscyklusanalyse af en model."},
+      unknown: {key: "unknown", rank: 3, emoji: "⚪❔", label: "Ingen tal", group: "Ingen årstal", long: "Ukendt: ingen sammenlignelige årstal offentliggjort."}
+    };
+
+    function totalSeries(company) {
+      return Object.entries(company.actual?.total ?? {})
+        .map(([year, value]) => ({year: Number(year), value}))
+        .filter((entry) => Number.isFinite(entry.value))
+        .sort((a, b) => a.year - b.year);
+    }
+
+    function emissionTrend(company) {
+      if (company.trendKey) return TRENDS[company.trendKey];
+      const series = totalSeries(company);
+      if (company.noCompanyData || series.length < 2) return TRENDS.unknown;
+      const first = series[0];
+      const last = series[series.length - 1];
+      const change = (last.value - first.value) / first.value;
+      return {...(change > 0 ? TRENDS.rising : TRENDS.falling), change, fromYear: first.year, toYear: last.year};
+    }
+
+    function trendChangeText(trend) {
+      if (trend.change == null) return trend.label;
+      const pct = Math.round(trend.change * 100);
+      return `${pct > 0 ? "+" : ""}${pct}%`;
+    }
+
+    function trendTitle(trend) {
+      if (trend.change == null) return trend.long;
+      return `${trend.long} Total Scope 1+2+3: ${trendChangeText(trend)} fra ${trend.fromYear} til ${trend.toYear}.`;
+    }
+
+    function defaultSelectedIds() {
+      return new Set(companies.filter((company) => emissionTrend(company).key === "rising").map((company) => company.id));
+    }
 
     function readStoredFlag(key) {
       try {
@@ -3222,7 +3648,7 @@
     }
 
     const state = {
-      selectedIds: new Set(companies.filter((company) => company.selected).map((company) => company.id)),
+      selectedIds: defaultSelectedIds(),
       metric: "total",
       expectation: "target",
       view: "absolute",
@@ -3238,6 +3664,8 @@
 
     const els = {
       companyList: document.getElementById("companyList"),
+      trendLegend: document.getElementById("trendLegend"),
+      selectRising: document.getElementById("selectRising"),
       selectAll: document.getElementById("selectAll"),
       selectNone: document.getElementById("selectNone"),
       metricSelect: document.getElementById("metricSelect"),
@@ -3261,6 +3689,9 @@
       tabPanels: document.querySelectorAll("[data-tab-panel]"),
       promiseCards: document.getElementById("promiseCards"),
       promiseTable: document.getElementById("promiseTable"),
+      aiCompanyKpis: document.getElementById("aiCompanyKpis"),
+      aiCompanyTable: document.getElementById("aiCompanyTable"),
+      aiWatchList: document.getElementById("aiWatchList"),
       dataChart: document.getElementById("dataChart"),
       dataChartWrap: document.getElementById("dataChartWrap"),
       dataTooltip: document.getElementById("dataTooltip"),
@@ -3428,23 +3859,43 @@
 
     function renderCompanyToggles() {
       els.companyList.innerHTML = "";
-      companies.forEach((company) => {
+      const sorted = companies
+        .map((company, index) => ({company, index, trend: emissionTrend(company)}))
+        .sort((a, b) => a.trend.rank - b.trend.rank || a.index - b.index);
+      let lastGroup = null;
+      sorted.forEach(({company, trend}) => {
+        if (trend.group !== lastGroup) {
+          const heading = document.createElement("div");
+          heading.className = "company-group-label";
+          heading.textContent = trend.group;
+          els.companyList.appendChild(heading);
+          lastGroup = trend.group;
+        }
         const label = document.createElement("label");
         label.className = "company-toggle";
+        label.title = trendTitle(trend);
         label.innerHTML = `
           <input type="checkbox" ${state.selectedIds.has(company.id) ? "checked" : ""} data-company="${company.id}">
           <span><span class="color-dot" style="background:${company.color}"></span><span class="company-name">${company.name}</span></span>
-          <span class="data-badge">${company.noCompanyData ? "mangler" : "data"}</span>
+          <span class="trend-badge">${trend.emoji} ${trendChangeText(trend)}</span>
         `;
         els.companyList.appendChild(label);
       });
+      els.trendLegend.innerHTML = `
+        <strong>Tendens (total Scope 1+2+3, første til seneste rapporterede år)</strong>
+        <span>${TRENDS.rising.emoji} Stigende &ndash; dårligt</span>
+        <span>${TRENDS.falling.emoji} Faldende, men ikke i mål &ndash; middel</span>
+        <span>${TRENDS.transparent.emoji} Ingen årstal, men åben livscyklusanalyse</span>
+        <span>${TRENDS.unknown.emoji} Ingen tal offentliggjort</span>
+        <span>\u{1F7E2} På sporet mod netto-nul: ingen endnu</span>
+      `;
     }
 
     function renderLegend() {
       const companiesHtml = selectedCompanies()
         .map((company) => `
-          <span class="legend-item" style="color:${company.color}">
-            <span class="color-dot" style="background:${company.color}"></span>${company.name}
+          <span class="legend-item" style="color:${company.color}" title="${trendTitle(emissionTrend(company))}">
+            <span class="color-dot" style="background:${company.color}"></span>${company.name} ${emissionTrend(company).emoji}
           </span>
         `).join("");
       els.legend.innerHTML = `
@@ -3499,8 +3950,8 @@
       const plot = makeSvg("g");
       svg.appendChild(plot);
 
-      if (years.includes(2025)) {
-        const bandX = xScale(2025);
+      if (years.includes(2026)) {
+        const bandX = xScale(Math.max(xMin, 2025.5));
         const nextX = xScale(2026);
         plot.appendChild(makeSvg("rect", {
           class: "forecast-band",
@@ -3631,6 +4082,7 @@
         <span>${point.type} · ${metricName}</span>
         <span>${state.view === "index" ? `${formatNumber(rawValue, {maximumFractionDigits: 0})} indeks` : `${formatNumber(rawValue, {maximumFractionDigits: 3})} Mt CO2e`}</span>
         <span>${point.type === "Forventet" ? modelLabel(company) : company.source.note}</span>
+        <span>${emissionTrend(company).emoji} ${trendTitle(emissionTrend(company))}</span>
       `;
       const cx = Number(circle.getAttribute("cx"));
       const cy = Number(circle.getAttribute("cy"));
@@ -3673,7 +4125,7 @@
             : "Rapporteret";
         return `
           <tr>
-            <td><span class="color-dot" style="background:${row.company.color}"></span>${row.company.name}</td>
+            <td><span class="color-dot" style="background:${row.company.color}"></span>${row.company.name} ${emissionTrend(row.company).emoji}</td>
             <td>${row.year}</td>
             <td>${row.actual == null ? "N/A" : formatNumber(row.actual, {maximumFractionDigits: 3})}</td>
             <td>${row.expected == null ? "N/A" : formatNumber(row.expected, {maximumFractionDigits: 3})}</td>
@@ -3730,7 +4182,7 @@
         return `
           <article class="promise-card">
             <div class="promise-top">
-              <h2><span class="color-dot" style="background:${company.color}"></span>${company.name}</h2>
+              <h2 title="${trendTitle(emissionTrend(company))}"><span class="trend-emoji">${emissionTrend(company).emoji}</span><span class="color-dot" style="background:${company.color}"></span>${company.name}</h2>
               <span class="risk-pill ${item.statusClass}" title="Status er vores vurdering af, hvor langt de er fra at holde løftet.">${item.status}</span>
             </div>
             <dl class="promise-detail">
@@ -3749,6 +4201,7 @@
               ${latestQuote}<br>
               ${item.latest.summary}<br>
               <a class="source-link" href="${item.latest.url}" target="_blank" rel="noreferrer">${item.latest.sourceTitle}</a>
+              ${(item.latest.extra ?? []).map((link) => `&middot; <a class="source-link" href="${link.url}" target="_blank" rel="noreferrer">${link.title}</a>`).join(" ")}
             </div>
           </article>
         `;
@@ -3758,7 +4211,7 @@
         const company = companyById(item.companyId);
         return `
           <tr>
-            <td><span class="color-dot" style="background:${company.color}"></span>${company.name}</td>
+            <td><span class="color-dot" style="background:${company.color}"></span>${company.name} ${emissionTrend(company).emoji}</td>
             <td>${item.promise.when}: ${item.statusClass === "missing" ? item.promise.quote : `&quot;${item.promise.quote}&quot;`}</td>
             <td>${item.promise.how}</td>
             <td><span class="risk-pill ${item.statusClass}">${item.status}</span> ${item.latest.summary}</td>
@@ -3770,6 +4223,35 @@
           </tr>
         `;
       }).join("");
+    }
+
+    function renderAiCompanies() {
+      els.aiCompanyKpis.innerHTML = aiCompanyKpiFacts.map((item) => `
+        <div class="kpi">
+          <div class="kpi-value">${item.value}</div>
+          <div class="kpi-label">${item.label}</div>
+          <div class="kpi-extra">${item.source}</div>
+        </div>
+      `).join("");
+
+      els.aiCompanyTable.innerHTML = aiCompanyRows.map((row) => {
+        const company = row.companyId ? companyById(row.companyId) : null;
+        const trend = row.trendKey ? TRENDS[row.trendKey] : emissionTrend(company);
+        const cell = (value, note) => `${value}${note ? `<small>${note}</small>` : ""}`;
+        return `
+          <tr>
+            <td>${company ? `<span class="color-dot" style="background:${company.color}"></span>` : ""}${row.name}</td>
+            <td title="${trendTitle(trend)}">${trend.emoji} ${trendChangeText(trend)}</td>
+            <td>${cell(row.annual, row.annualNote)}</td>
+            <td>${cell(row.prompt, row.promptNote)}</td>
+            <td>${cell(row.model, row.modelNote)}</td>
+            <td>${row.target}</td>
+            <td>${row.sources.map((source) => `<a class="source-link" href="${source.url}" target="_blank" rel="noreferrer">${source.title}</a>`).join("")}</td>
+          </tr>
+        `;
+      }).join("");
+
+      renderSourceList(els.aiWatchList, aiWatchItems);
     }
 
     function renderDataCentreChart() {
@@ -4597,6 +5079,7 @@
       renderTable();
       renderSources();
       renderPromiseCards();
+      renderAiCompanies();
       renderDataCentreChart();
       renderDataBenchmarks();
       renderDataTable();
@@ -4656,6 +5139,11 @@
         if (!input) return;
         if (input.checked) state.selectedIds.add(input.dataset.company);
         else state.selectedIds.delete(input.dataset.company);
+        render();
+      });
+
+      els.selectRising.addEventListener("click", () => {
+        state.selectedIds = defaultSelectedIds();
         render();
       });
 
