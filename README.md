@@ -16,6 +16,7 @@ Visualiserer techgiganternes CO2-udledninger 📊🌍💻
 
 # Todo
 - [x] Mistral med
+- [ ] Næsten samme graf fra https://fossilfree.greenweb.org/2026/ 
 - [ ] Metas 2025-tal (når 2026-rapporten udkommer)
 - [ ] Samsungs 2025-tal fra 2026-rapporten
 - [ ] Scope 1+2 for OpenAI, Anthropic og xAI, hvis de indberetter under Californiens SB 253 (frist 10. nov. 2026)
